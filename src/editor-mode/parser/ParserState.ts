@@ -99,6 +99,7 @@ export class ParserState {
             return null;
         }
         this.line = this.doc.line(this.linePos + 1);
+        this.offset = 0;
         this.resolveContext();
         if (skipBlankLine) {
             if (this.isBlankLine()) {
@@ -110,7 +111,6 @@ export class ParserState {
                 }
             }
         }
-        this.offset = 0;
         return this.line;
     }
     isLastLine() {

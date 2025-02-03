@@ -174,7 +174,6 @@ export class ParserState {
         this.curCtx = ctx;
     }
     resolveContext() {
-        if (this.offset) { return }
         while (this.cursorPos() == "before") { this.nextCursor() }
         this.setContext(this.getContext());
         let isSkip = false,
@@ -207,9 +206,11 @@ export class ParserState {
                 toBeResolved = true;
                 offset -= 1;
         }
-        toBeResolved && this.queue.resolve(NonHighlightFormats, offset);
-        includesHl && this.queue.resolve([Format.HIGHLIGHT], offset);
-        isSkip && this.skipCursorRange();
-        this.curCtx && this.nextCursor();
+        if (!this.offset) {
+            if (toBeResolved) { this.queue.resolve(NonHighlightFormats, offset) }
+            if (includesHl) { this.queue.resolve([Format.HIGHLIGHT], offset) }
+        }
+        if (isSkip) { this.skipCursorRange() }
+        if (this.curCtx) { this.nextCursor() }
     }
 }

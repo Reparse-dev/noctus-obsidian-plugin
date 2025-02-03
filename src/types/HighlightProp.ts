@@ -1,1 +1,0 @@
-export type HighlightProp = [number, number, number, number, string | undefined];

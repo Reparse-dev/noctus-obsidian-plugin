@@ -37,7 +37,6 @@ export class Parser {
             Tokenizer.colorTag(state);
         }
         state.resolveContext();
-        state.processCursor();
         do { this.parseLine() } while (state.nextLine())
         this.queue.clear();
         this.removeState();

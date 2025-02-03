@@ -126,12 +126,12 @@ export class ParserState {
         }
         return false;
     }
-    cursorPos(endSide: 0 | -1 = 0): "after" | "before" | "cover" | null {
+    cursorPos(endSide: 0 | -1 = 0): "after" | "before" | "touch" | null {
         let offset = this.gOffset;
         if (!this.cursor) { return null }
         if (offset < this.cursor.from) { return "after" }
         if (offset > this.cursor.to + endSide) { return "before" }
-        return "cover";
+        return "touch";
     }
     processCursor() {
         let cursorPos = this.cursorPos(-1);
@@ -139,7 +139,7 @@ export class ParserState {
             this.nextCursor();
             cursorPos = this.cursorPos(-1);
         }
-        if (cursorPos != "cover") { return null }
+        if (cursorPos != "touch") { return null }
         let nodeName = this.cursor!.name;
         if (nodeName.includes("formatting-highlight")) { return "hl_delim" }
         if (nodeName.includes("table-sep")) { return "table_sep" }
@@ -164,7 +164,7 @@ export class ParserState {
                 (node) => node.parent?.name == "Document"
             );
             if (node) { return getContextFromNode(node) }
-        } else if (this.cursorPos() == "cover") {
+        } else if (this.cursorPos() == "touch") {
             let node = this.cursor!.node;
             return getContextFromNode(node);
         }

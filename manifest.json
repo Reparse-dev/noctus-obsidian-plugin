@@ -5,5 +5,5 @@
 	"minAppVersion": "0.15.0",
 	"description": "Extend your markdown syntax using delimiters instead of HTML tags, such as underlining, superscript, subscript, highlighting, aligning.",
 	"author": "Kotaindah55 (Sheva Ihza)",
-	"isDesktopOnly": true
+	"isDesktopOnly": false
 }

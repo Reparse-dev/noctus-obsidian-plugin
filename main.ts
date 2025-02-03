@@ -1,35 +1,24 @@
 import { Plugin } from "obsidian";
 import { EditorView } from "@codemirror/view";
 // import { drawSelection } from "@codemirror/view";
-import { extendedFormattingPlugin, customHighlightPlugin, alignerPlugin } from "./src/editorPlugins/decorationBuilders";
-import { customHighlightField, extendedFormattingField } from "./src/editorPlugins/stateFields";
-import { ExtendedFormattingPostProcessor, CustomHighlightPostProcessor, AlignerPostProcessor } from "./src/postProcessor";
+import { parserField } from "src/editor-mode/state-fields";
+import { editorExtendedSyntax } from "src/editor-mode/extensions";
+import { PreviewExtendedSyntax } from "src/preview-mode/post-processor";
 
 export default class ExtendedMarkdownSyntax extends Plugin {
-    
     async onload() {
         await this.loadData();
-          
         this.registerEditorExtension([
             // state fields
-            extendedFormattingField,
-            customHighlightField,
+            parserField,
             // view plugins
-            extendedFormattingPlugin,
-            customHighlightPlugin,
-            alignerPlugin,
+            editorExtendedSyntax,
             // facet
-            EditorView.outerDecorations.of(view => view.plugin(customHighlightPlugin)!.decorations)
+            EditorView.outerDecorations.of(view => view.plugin(editorExtendedSyntax)!.outerDecoSet)
         ]);
-        
-        // postprocessor
-        this.registerMarkdownPostProcessor(new ExtendedFormattingPostProcessor(this.app.workspace).postProcess);
-        this.registerMarkdownPostProcessor(new CustomHighlightPostProcessor().postProcess);
-        this.registerMarkdownPostProcessor(new AlignerPostProcessor().postProcess);
-        
+        this.registerMarkdownPostProcessor(new PreviewExtendedSyntax().postProcess);
         console.log("Load Extended Markdown Syntax");
     }
-    
     onunload(): void {
         console.log("Unload Extended Markdown Syntax");
     }

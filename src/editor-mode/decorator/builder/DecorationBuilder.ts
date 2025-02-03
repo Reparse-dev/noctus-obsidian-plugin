@@ -79,8 +79,8 @@ export class DecorationBuilder {
             filterTo = (this.parser.tokens[end]?.from ?? docLen);
         return decoSet.map(update.changes).update({
             add: ranges, filterFrom, filterTo,
-            filter(from, to) {
-                return (to == filterFrom || from == filterTo) && to != from;
+            filter(from, to, val) {
+                return (to == filterFrom || from == filterTo) && ((val.spec.type as Format) <= Format.ALIGN_JUSTIFY || to != from);
             }
         });
     }

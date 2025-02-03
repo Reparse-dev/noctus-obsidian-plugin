@@ -103,8 +103,7 @@ export class ParserState {
         this.resolveContext();
         if (skipBlankLine) {
             if (this.isBlankLine()) {
-                this.offset = this.line.length;
-                this.queue.resolveAll();
+                this.queue.resolveAll(this.line.to);
                 while (this.linePos != this.maxLine) {
                     this.line = this.doc.line(this.linePos + 1);
                     if (!this.isBlankLine()) { break }

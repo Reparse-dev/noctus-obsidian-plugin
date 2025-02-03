@@ -196,6 +196,7 @@ export class ParserState {
                 break;
             case LineCtx.LIST_HEAD:
                 includesHl = true;
+            // eslint-disable-next-line no-fallthrough
             case LineCtx.HEADING:
             case LineCtx.FOOTNOTE_HEAD:
                 toBeResolved = true;

@@ -50,5 +50,6 @@ export default [{
         "no-prototype-builtins": "off",
         "@typescript-eslint/no-empty-function": "off",
         "prefer-const": "off",
+        "no-cond-assign": "off",
     },
 }];

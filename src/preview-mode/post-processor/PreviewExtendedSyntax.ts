@@ -1,11 +1,9 @@
 import { MarkdownPostProcessor } from "obsidian";
 import { PreviewModeParser } from "src/preview-mode/parser";
 import { CustomAlign, CustomHighlight } from "src/preview-mode/post-processor";
-import { SpoilerSpanElement } from "src/preview-mode/custom-element";
 
 export class PreviewExtendedSyntax {
     constructor() {
-        customElements.define("spoiler-span", SpoilerSpanElement);
     }
     private readonly query = "p, h1, h2, h3, h4, h5, h6, td, th, li:not(:has(p)), .callout-title-inner";
     private customAlign = new CustomAlign();

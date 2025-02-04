@@ -14,7 +14,15 @@ export const FormatRules: { [P in MainFormat]: {char: string, length: number, ex
         length: 2,
         exactLen: true,
         allowSpace: true,
-        getEl: () => document.createElement("spoiler-span")
+        getEl: () => {
+            return document.createSpan({ cls: "spoiler" }, (el) => {
+                el.addEventListener("click", (evt) => {
+                    let spoiler = evt.currentTarget as Element,
+                        isHidden = !spoiler.hasClass("spoiler-revealed");
+                    spoiler.toggleClass("spoiler-revealed", isHidden);
+                })
+            });
+        }
     },
     [Format.SUPERSCRIPT]: {
         char: "^",

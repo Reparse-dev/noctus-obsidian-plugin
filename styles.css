@@ -115,7 +115,7 @@ mark {
     }
 }
 
-spoiler-span {
+span.spoiler {
     border-radius: 2px;
     transition-duration: 0.1s;
     transition-property: color;
@@ -125,7 +125,7 @@ spoiler-span {
     .theme-light & {
         background-color: var(--color-base-40);
     }
-    &:not([revealed]) {
+    &:not(.spoiler-revealed) {
         color: transparent;
     }
 }

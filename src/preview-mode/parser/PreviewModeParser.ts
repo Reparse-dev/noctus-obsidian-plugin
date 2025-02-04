@@ -107,7 +107,7 @@ export class PreviewModeParser {
             hasOpen = !!this.queue[type],
             hasSpaceBefore = isWhitespace(str[this.offset - 1]),
             hasSpaceAfter: boolean;
-        while (str[this.offset] == char) { this.offset++, length++ }
+        while (str[this.offset] == char) { this.offset++; length++ }
         hasSpaceAfter = isWhitespace(str[this.offset]);
         if (hasOpen && hasSpaceBefore || !hasOpen && hasSpaceAfter || length != reqLength) { return false }
         let range = new Range();

@@ -1,4 +1,3 @@
-export * from "./DelimLookup";
 export * from "./FormatRules";
 export * from "./NonHighlightFormats";
 export * from "./SpaceAllowedFormats";

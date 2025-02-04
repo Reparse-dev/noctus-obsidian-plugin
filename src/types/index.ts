@@ -1,5 +1,5 @@
 import type { SyntaxNode, Tree } from "@lezer/common";
-import type { Format, TokenRole, TokenStatus } from "src/enums";
+import type { Format, SettingOpt1, TokenRole, TokenStatus } from "src/enums";
 import { Text } from "@codemirror/state"
 
 /** Token interface */
@@ -62,6 +62,7 @@ export type StateConfig = {
     doc: Text,
     tree: Tree,
     offset: number,
+    settings: PluginSettings,
     maxLine?: number
 }
 
@@ -77,3 +78,14 @@ export type MainFormat = Extract<Format, Format.INSERTION | Format.SPOILER | For
 export type TokenGroup = Token[];
 
 export type MainFormat2 = Exclude<MainFormat, Format.HIGHLIGHT>;
+
+export type PluginSettings = {
+    insertion: SettingOpt1;
+    spoiler: SettingOpt1;
+    superscript: SettingOpt1;
+    subscript: SettingOpt1;
+    customHighlight: SettingOpt1;
+    customAlign: SettingOpt1;
+    editorEscape: boolean;
+    colorButton: boolean;
+}

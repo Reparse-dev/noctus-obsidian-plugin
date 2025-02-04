@@ -2,10 +2,11 @@ import { StateEffect, StateField } from "@codemirror/state";
 import { Parser } from "src/editor-mode/parser";
 import { ParseContext, syntaxTree } from "@codemirror/language";
 import { Tree } from "@lezer/common";
+import { settingsFacet } from "../facets";
 
 export const parserField = StateField.define({
     create(state) {
-        let parser = new Parser();
+        let parser = new Parser(state.facet(settingsFacet.reader));
         parser.initParse(state.doc, syntaxTree(state));
         return parser;
     },

@@ -95,7 +95,7 @@ export class DecorationBuilder {
             if (!selectRanges[i]) { return false }
             if (selectRanges[i].from > to) { return }
             let type = val.spec.type as Format.HIGHLIGHT | Format.SPOILER;
-            if (type == Format.HIGHLIGHT) {
+            if (type == Format.HIGHLIGHT && this.parser.settings.colorButton) {
                 let color = val.spec.color as string,
                     offset = from + (val.spec.openLen as number);
                 decoRanges.push(ColorButton.of(offset, color));

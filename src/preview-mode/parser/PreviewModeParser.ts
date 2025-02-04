@@ -1,7 +1,7 @@
-import { DelimLookup, FormatRules } from "src/shared-configs";
+import { FormatRules } from "src/shared-configs";
 import { Format } from "src/enums";
 import { MainFormat2 } from "src/types";
-import { SkippedClasses } from "src/preview-mode/configs";
+import { SkippedClasses, PreviewDelimLookup } from "src/preview-mode/configs";
 import { hasClasses, isWhitespace } from "src/preview-mode/utils";
 
 export class PreviewModeParser {
@@ -49,7 +49,7 @@ export class PreviewModeParser {
         let str = this.curNode.textContent ?? "";
         while (!this.nodeChanged && this.offset < str.length) {
             let char = str[this.offset],
-                type = DelimLookup[char];
+                type = PreviewDelimLookup[char];
             if (char == " " || char == "\n" || char == "\t") {
                 this.resolve(Format.SUPERSCRIPT);
                 this.resolve(Format.SUBSCRIPT);

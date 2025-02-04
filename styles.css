@@ -129,3 +129,7 @@ span.spoiler {
         color: transparent;
     }
 }
+
+.warning-desc {
+    color: rgb(var(--color-orange-rgb));
+}

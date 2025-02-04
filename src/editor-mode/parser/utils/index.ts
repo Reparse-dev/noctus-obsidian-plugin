@@ -6,3 +6,4 @@ export * from "./getShifterStart";
 export * from "./hasInterferer";
 export * from "./retrieveDelimSpec";
 export * from "./validateDelim";
+export * from "./disableEscape";

@@ -1,8 +1,8 @@
 import { Line, Text } from "@codemirror/state";
 import { Tree, TreeCursor } from "@lezer/common";
-import { StateConfig, TokenGroup } from "src/types";
+import { PluginSettings, StateConfig, TokenGroup } from "src/types";
 import { TokenQueue } from "src/editor-mode/parser";
-import { Format, LineCtx } from "src/enums";
+import { Format, LineCtx, SettingOpt1 } from "src/enums";
 import { NonHighlightFormats, SpaceRestrictedFormats } from "src/shared-configs";
 import { SKIPPED_NODE_RE } from "src/editor-mode/parser/regexps";
 import { findNode, getContextFromNode } from "src/editor-mode/parser/utils";
@@ -19,6 +19,7 @@ export class ParserState {
     queue: TokenQueue;
     curCtx: LineCtx = LineCtx.NONE;
     prevCtx: LineCtx = LineCtx.NONE;
+    settings: PluginSettings;
     constructor(config: StateConfig, tokens: TokenGroup) {
         this.doc = config.doc;
         this.tree = config.tree;
@@ -27,6 +28,7 @@ export class ParserState {
         this.offset = config.offset - this.line.from;
         this.tokens = tokens;
         this.cursor = this.tree.cursor();
+        this.settings = config.settings;
         this.nextCursor();
         if (
             (!this.lastToken || this.lastToken.to < this.line.from) &&
@@ -140,7 +142,12 @@ export class ParserState {
         }
         if (cursorPos != "touch") { return null }
         let nodeName = this.cursor!.name;
-        if (nodeName.includes("formatting-highlight")) { return "hl_delim" }
+        if (
+            this.settings.customHighlight & SettingOpt1.EDITOR_MODE &&
+            nodeName.includes("formatting-highlight")
+        ) {
+            return "hl_delim";
+        }
         if (nodeName.includes("table-sep")) { return "table_sep" }
         if (SKIPPED_NODE_RE.test(nodeName)) { return "skipped" }
         return null;

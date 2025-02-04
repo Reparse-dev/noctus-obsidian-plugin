@@ -1,13 +1,13 @@
-import { ChangedRange, MainFormat, StateConfig, TokenGroup } from "src/types";
+import { ChangedRange, MainFormat, PluginSettings, StateConfig, TokenGroup } from "src/types";
 import { ParserState } from "src/editor-mode/parser";
 import { TokenQueue } from "src/editor-mode/parser";
 import { ChangeSet, Line, Text } from "@codemirror/state";
-import { Format, TokenRole, TokenStatus } from "src/enums";
+import { Format, SettingOpt1, TokenRole, TokenStatus } from "src/enums";
 import { Tokenizer } from "src/editor-mode/parser";
-import { DelimLookup } from "src/shared-configs";
 import { SpaceRestrictedFormats } from "src/shared-configs";
 import { Tree } from "@lezer/common";
-import { composeChanges, findShifterAt, getShifterStart, hasInterferer } from "src/editor-mode/parser/utils";
+import { composeChanges, disableEscape, findShifterAt, getShifterStart, hasInterferer } from "src/editor-mode/parser/utils";
+import { EditorDelimLookup } from "./configs";
 
 export class Parser {
     private state: ParserState;
@@ -15,7 +15,12 @@ export class Parser {
     private reusedTokens: TokenGroup | undefined;
     tokens: TokenGroup = [];
     lastParsed = { startToken: 0, endToken: 0 };
-    constructor() {
+    settings: PluginSettings;
+    constructor(settings: PluginSettings) {
+        this.settings = settings;
+        if (!settings.editorEscape) {
+            disableEscape();
+        }
     }
     private defineState(config: StateConfig) {
         this.state = new ParserState(config, this.tokens);
@@ -44,7 +49,9 @@ export class Parser {
     private parseLine() {
         let type: MainFormat | undefined,
             state = this.state;
-        Tokenizer.align(state);
+        if (this.settings.customAlign & SettingOpt1.EDITOR_MODE) {
+            Tokenizer.align(state);
+        }
         while (true) {
             if (state.isSpace()) {
                 state.queue.resolve(SpaceRestrictedFormats);
@@ -57,7 +64,7 @@ export class Parser {
             } else if (nodeType == "table_sep") {
                 state.queue.resolveAll();
                 state.advance();
-            } else if (type = DelimLookup[state.char]) {
+            } else if (type = EditorDelimLookup[state.char]) {
                 Tokenizer.delim(state, type);
             } else if (!state.advance()) {
                 break;
@@ -65,7 +72,7 @@ export class Parser {
         }
     }
     initParse(doc: Text, tree: Tree) {
-        this.defineState({ doc, tree, offset: 0 });
+        this.defineState({ doc, tree, offset: 0, settings: this.settings });
         this.streamParse();
         this.lastParsed.endToken = this.tokens.length;
     }
@@ -75,7 +82,7 @@ export class Parser {
         if (changedRange) {
             offset = Math.min(offset, changedRange.from);
         }
-        let config: StateConfig = { doc, tree, offset };
+        let config: StateConfig = { doc, tree, offset, settings: this.settings };
         this.shiftOffsetByNode(config, oldTree);
         this.filterTokens(config, oldTree, changedRange);
         this.defineState(config);

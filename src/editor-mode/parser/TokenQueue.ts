@@ -3,7 +3,7 @@ import { MainFormat, Token } from "src/types";
 import { ParserState } from "src/editor-mode/parser";
 
 export class TokenQueue {
-    open: { [F in MainFormat]: Token | null } = {
+    open: Record<MainFormat, Token | null> = {
         [Format.INSERTION]: null,
         [Format.SPOILER]: null,
         [Format.SUPERSCRIPT]: null,
@@ -14,14 +14,14 @@ export class TokenQueue {
      * Content token is generated and pushed automatically
      * as its opening delimiter enter the queue.
      */
-    content: { [F in MainFormat]: Token | null } = {
+    content: Record<MainFormat, Token | null> = {
         [Format.INSERTION]: null,
         [Format.SPOILER]: null,
         [Format.SUPERSCRIPT]: null,
         [Format.SUBSCRIPT]: null,
         [Format.HIGHLIGHT]: null,
     };
-    close: { [F in MainFormat]: Token | null } = {
+    close: Record<MainFormat, Token | null> = {
         [Format.INSERTION]: null,
         [Format.SPOILER]: null,
         [Format.SUPERSCRIPT]: null,

@@ -1,7 +1,7 @@
 import { Format } from "src/enums";
 import { MainFormat } from "src/types";
 
-export const FormatRules: { [P in MainFormat]: {char: string, length: number, exactLen: boolean, allowSpace: boolean, getEl: () => Element} } = {
+export const FormatRules: Record<MainFormat, { char: string, length: number, exactLen: boolean, allowSpace: boolean, getEl: () => Element }> = {
     [Format.INSERTION]: {
         char: "+",
         length: 2,

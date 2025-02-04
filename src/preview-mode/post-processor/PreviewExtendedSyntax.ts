@@ -38,7 +38,7 @@ export class PreviewExtendedSyntax {
     }
     postProcess: MarkdownPostProcessor = container => {
         if (this.settings.customHighlight & SettingOpt1.PREVIEW_MODE) {
-        this.customHighlight.decorate(container);
+            this.customHighlight.decorate(container);
         }
         if (
             this.settings.customAlign & SettingOpt1.PREVIEW_MODE &&

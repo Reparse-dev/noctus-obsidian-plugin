@@ -15,13 +15,14 @@ export const FormatRules: { [P in MainFormat]: {char: string, length: number, ex
         exactLen: true,
         allowSpace: true,
         getEl: () => {
-            return document.createSpan({ cls: "spoiler" }, (el) => {
-                el.addEventListener("click", (evt) => {
-                    let spoiler = evt.currentTarget as Element,
-                        isHidden = !spoiler.hasClass("spoiler-revealed");
-                    spoiler.toggleClass("spoiler-revealed", isHidden);
-                })
+            let spoilerEl = document.createElement("span");
+            spoilerEl.addClass("spoiler");
+            spoilerEl.addEventListener("click", (evt) => {
+                let spoilerEl = evt.currentTarget as Element,
+                    isHidden = !spoilerEl.hasClass("spoiler-revealed");
+                spoilerEl.toggleClass("spoiler-revealed", isHidden);
             });
+            return spoilerEl;
         }
     },
     [Format.SUPERSCRIPT]: {

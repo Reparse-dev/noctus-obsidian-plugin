@@ -80,7 +80,7 @@ export class DecorationBuilder {
         return decoSet.map(update.changes).update({
             add: ranges, filterFrom, filterTo,
             filter(from, to, val) {
-                return (to == filterFrom || from == filterTo) && ((val.spec.type as Format) <= Format.ALIGN_JUSTIFY || to != from);
+                return (to == filterFrom || from == filterTo) && ((val.spec.type as Format) <= Format.ALIGN_JUSTIFY && from != 0 || to != from);
             }
         });
     }

@@ -12,6 +12,7 @@ import { configureDelimLookup } from "src/utils";
 
 export default class ExtendedMarkdownSyntax extends Plugin {
     settings: PluginSettings;
+    areSettingsChanged: boolean = false;
     async onload() {
         await this.loadSettings();
         this.addSettingTab(new SettingTab(this.app, this));
@@ -29,6 +30,10 @@ export default class ExtendedMarkdownSyntax extends Plugin {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     }
     async saveSettings() {
+        if (!this.areSettingsChanged) {
+            this.areSettingsChanged = true;
+            new Notice("You must restart the app to take the effect")
+        }
         await this.saveData(this.settings);
     }
     onunload(): void {

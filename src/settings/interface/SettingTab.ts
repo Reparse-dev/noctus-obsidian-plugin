@@ -18,6 +18,7 @@ export class SettingTab extends PluginSettingTab {
     display(): void {
         let { containerEl } = this,
             { settings } = this.plugin;
+        this.plugin.areSettingsChanged = false;
         containerEl.empty();
         new Setting(containerEl)
             .setName("Insertion (underline)")
@@ -81,8 +82,5 @@ export class SettingTab extends PluginSettingTab {
                 toggle.setValue(settings.colorButton);
                 toggle.onChange((val) => { settings.colorButton = val; this.plugin.saveSettings() });
             });
-        new Setting(containerEl)
-            .setDesc("You must restart the app to take the effect.")
-            .descEl.addClass("warning-desc");
     }
 }

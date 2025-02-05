@@ -1,6 +1,6 @@
 # Extended Markdown Syntax - Obsidian Plugin
 
-This plugin provides some alternatives for inline formatting using non-standard syntaxes instead of using html tags, such as underline, superscript, and much more.
+Provides some alternatives for inline formatting using non-standard syntaxes instead of using html tags, such as underline, superscript, and much more.
 
 You can easily create text that is <u>underlined</u>, <sup>superscripted</sup>, or <sub>subscripted</sub> without any pain of writing html tags. And don't forget, this plugin supports both modes: editor mode and preview mode.
 
@@ -10,147 +10,216 @@ You can easily create text that is <u>underlined</u>, <sup>superscripted</sup>, 
 
 This plugin has four main features:
 
-1. Inline formatting (underline, superscript, subscript).
+1. Inline formatting (insertion, spoiler, superscript, subscript).
 2. Paragraph aligning.
 3. Custom highlight color.
-4. Discord-flavoured spoiler.
+4. Context-aware formatting.
 
 > [!note]
 > As it should be, the syntax will not be parsed if it is inside inline-code, codeblock, inline-math, mathblock, and internal links. Instead, they will still be styled by those syntaxes if they are inside them.
 
-### Inline Formatting
+### A. Inline Formatting
 
-| Format      | Delimiter       |
-| ----------- | --------------- |
-| underline   | `++your text++` |
-| superscript | `^your text^`   |
-| superscript | `~your text~`   |
+There is four formatting types that currently developed in this plugin: **insertion** (underline), **Discord-flavoured spoiler**, and **Pandoc-flavoured superscript and subscript**.
 
-You can format text by wrapping it with delimiters.
+| Type        | Syntax              | Result                                             |
+| ----------- | ------------------- | -------------------------------------------------- |
+| insertion   | `++your text++`     | <u>your text</u>                                   |
+| spoiler     | `\|\|your text\|\|` | <span style="background: #2e2e2e">your text</span> |
+| superscript | `^your-text^`       | <sup>your-text</sup>                               |
+| subscript   | `~your-text~`       | <sub>your-text</sub>                               |
 
-```markdown
-++underline++ ^superscript^ ~subscript~
-```
+By default, **insertion** give the text underline style, **spoiler** hide the text and can be revealed by clicking it (or hovering over it in editor mode), while **superscript** and **subscript** make the text being raised or lowered as `<sup>` and `<sub>` do.
 
-This will result:
+The main advantage of using those syntaxes over html tags is that those syntaxes are rendered properly in the editor alongside other built-in syntaxes. So you can combine them without blocking other style being rendered in editor, in stark contrast to the html tags, for instance `this *is ++italic-underlined++*`.
 
-![ems1.png](readme/ems1.png)
+To make clear and avoid ambiguity, some rules are applied to the syntaxes:
 
-You can also combine various formatting without any rendering issues in live-preview mode.:
+#### 1. General Rules for Inline Syntaxes (Insertion, Spoiler, Superscript, Subscript)
 
-```markdown
-Lorem ++ip*s*um++ dolor sit amet, consectetur adipiscing elit. Aenean sed enim ut dui vehicula **eleifend ++at ~non~++ magna**. Vestibulum viverra imperdiet magna ut pharetra. Proin eleifend orci felis, eget ultricies velit varius quis. Aliquam quis auctor lectus. Donec ~~cong^ue^~~ sed nibh sollicitudin dignissim.
-```
+- Opening delimiter must not be followed by any whitespace character (regular space, tab, and new line), and the closing one must not be preceded by any whitespace character.
+- Delimiter must satisfy its requiered length as will be explained later, and must not be preceded or followed by the same character as the delimiter, or the same non-escaped if configured for that.
+- Delimiter must not be escaped, if it was configured to not be escaped, by a backslash. Otherwise, it will act as literal character.
+- Formatting only occurs when opening delimiter met its closing.
+- Content text, that is surrounded by delimiters, must at least one character.
+- Content text must not have two or more new line character.
+- Any built-in syntaxes from Obsidian has a higher precedence than that in this plugin.
 
-![ems2.gif](readme/ems2.gif)
+For better understanding, the table below can give some example applying those rules:
 
-Backslash can also be used to escape delimiters, so the text will not be formatted.
+| Valid                                              | Invalid                                    |
+| -------------------------------------------------- | ------------------------------------------ |
+| `++lorem++`                                        | `++ lorem++` `++lorem` `lorem++`           |
+| `++lor em++`                                       | `++lorem ++`                               |
+| `++l++`                                            | `++++`                                     |
+| `++l+o+r+em++`                                     | `++dfdf+++`                                |
+| `++lo++rem++` (third plus pair doesn't include)    | `++lo\nre\nm++` (`\n` as a new line char)  |
+| `++lo\nr   e  m++`                                 | `+++lore++m+++`                            |
+| `++ lor++em++` (first one doesn't include)         | `++ ++`                                    |
+| `\+++lorem++ ++ipsum\+++` (if escaping is enabled) | `\++lorem++ +\++ipsum\++++`                |
 
-```markdown
-++will be formatted++ \++will be escaped++ +\+also will be escaped+\+.
-```
+#### 2. Rules for Insertion and Spoiler
 
-![ems3.png](readme/ems3.png)
-
-### Paragraph Aligning
-
-| Align   | Marker      |
-| ------- | ----------- |
-| left    | `!left!`    |
-| right   | `!right!`   |
-| center  | `!center!`  |
-| justify | `!justify!` |
-
-You can easily set the alignment of a paragraph by writing the aligning-marker at the beginning of the paragraph.
-
-```markdown
-!left!Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sed enim ut dui vehicula eleifend at non magna. Vestibulum viverra imperdiet magna ut pharetra. Proin eleifend orci felis, eget ultricies velit varius quis. Aliquam quis auctor lectus. Donec congue sed nibh sollicitudin dignissim.
-
-!right!Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sed enim ut dui vehicula eleifend at non magna. Vestibulum viverra imperdiet magna ut pharetra. Proin eleifend orci felis, eget ultricies velit varius quis. Aliquam quis auctor lectus. Donec congue sed nibh sollicitudin dignissim.
-
-!center!Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sed enim ut dui vehicula eleifend at non magna. Vestibulum viverra imperdiet magna ut pharetra. Proin eleifend orci felis, eget ultricies velit varius quis. Aliquam quis auctor lectus. Donec congue sed nibh sollicitudin dignissim.
-
-!justify!Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sed enim ut dui vehicula eleifend at non magna. Vestibulum viverra imperdiet magna ut pharetra. Proin eleifend orci felis, eget ultricies velit varius quis. Aliquam quis auctor lectus. Donec congue sed nibh sollicitudin dignissim.
-```
-
-This will shown as:
-
-![ems4.png](readme/ems4.png)
-
-Marker can also be applied to headings by placing it after hash marks and space:
+- Insertion is defined as text consist at least one character surrounded by exactly double plus signs (`++`) on each side.
+- Spoiler is the same as the insertion, it's just surrounded by exactly double bars (`||`) on each side.
 
 ```
-# !{alignment}!your heading
+++insertion++ +not insertion+ ||spoiler|| |||not spoiler||||
 ```
 
-![ems5.gif](readme/ems5.gif)
+the expected result is:
 
-Moreover, markers can also be applied to callouts, both titles and content, and table cells.
+>  <u>insertion</u> +not insertion+ <span style="background: #2e2e2e">spoiler</span> |||not spoiler||||
+
+#### 3. Rules for Superscript and Subscript
+
+- Superscript is defined as text consist at least one character surrounded by only single caret (`^`) on each side, and must not contain any of whitespace character.
+- Subscript act like superscript, it's just use single tilde as delimiter.
+- Thus, insertion and spoiler allow its content to have any whitespace character. It's contasts with the case of superscript and subscript.
 
 ```
-> [!note] !{alignment}!Your callout title
-> !{alignment}!Your callout content
-
-To adjust the alignment of callout title, place alignment marker after callout type identifier (e.g. "[!note]") and space.
+^sup^ ^^not-sup^ ^not sup^, ~sub~ ~~not-sub~~~ ~not
+sub~
 ```
 
-![ems6.gif](readme/ems6.gif)
+will be rendered as:
+
+> <sup>sup</sup> ^^not-sup^ ^not sup^, <sub>sub</sub> ~~not-sub~~~ ~not
+> sub~
+
+#### 4. Delimiter escaping
+
+As already explained, using escaper backslash can change the semantic meaning to that being escaped. Escaped punctuation is treated as regular character that doesn't have functional use. This applies to those delimiters when "Delimiter escaping" option is switched on.
+
+```
+++insertion++ \++not insertion\++ in editor mode
+```
+
+However, we can only apply this feature in editor mode, since escaped character being rendered as normal character without being wrapped by any tag (and it makes sense).
+
+```
+++insertion++ \++still insertion\++ \+\+still insertion\+\+, \+++not insertion+\++ in preview mode
+```
+
+Due to this condition, "Delimiter escaping" was turned of by default to maintain consistency between editor and preview mode.
+
+### B. Paragraph Aligning
+
+Paragraph can be aligned by inserting one of specific tags exactly at the beginning of the line. Those tags are `!!left!!`, `!!right!!`, `!!center!!`, and `!!justify!!`, where each tag representing a type of alignment that should be used.
+
+Note that any character that was prepended before the tag, even if it's just one space, will terminate the tag, so it's treated as regular characters.
+
+```
+!!center!!will be centered
+
+ !!center!!will not be centered
+```
+
+It's will be rendered like this:
+
+> <div>
+> <p style="text-align: center">will be centered</p>
+> <p> !!center!!will not be centered</p>
+> </div>
+
+> [!caution] Known bug
+>
+> In editor mode, each line depends on itself, so you must type alignment tag to get it be aligned. However, in preview mode, paragraph can consist more than one line. Accordingly, only tag that located at the first line of the paragraph (if it consists more than a line) will be treated as it is, and the others will act as a regular text.
+>
+> So, this markdown
+>
+> ```
+> !!center!!aligned to the center in both modes
+> !!right!!aligned to the right in editor, to the center in preview
+> not being aligned in editor (or aligned to its initial), aligned to center in preview
+> ```
+> 
+> will be rendered in editor like this:
+> > <p style="text-align: center">aligned to the center in both modes</p>
+> > <p style="text-align: right">aligned to the right in editor, to the center in preview</p>
+> > not being aligned in editor (or aligned to its initial), aligned to center in preview
+> 
+> and in preview like this:
+> > <p style="text-align: center">
+> > aligned to the center in both modes<br>
+> > !!right!!aligned to the right in editor, to the center in preview<br>
+> > not being aligned in editor (or aligned to its initial), aligned to center in preview<br>
+> > </p>
+
+### C. Custom Highlight Color
+
+Color of each highlight can be customized by adding color tag exactly after its opening delimiter. The tag consists of opening curly bracket `{`, alphanumeric character(s) `a-zA-Z0-9` (at least one, can be added with minus sign `-`), and closing curly bracket, for example: `=={red}Red==, =={Green2}Green==, =={ocean-blue}Blue==`.
+
+| Valid color tag        | Invalid color tag                                         |
+| ---------------------- | --------------------------------------------------------- |
+| `=={color}lorem==`     | `== {color}lorem==`, `==a{color}lorem==`                  |
+| `=={abcAb--10}lorem==` | `=={ }lorem==,` `=={*_}lorem==`, `=={green_color}lorem==` |
+
+Valid color tag will be added in the highlight classes, so `=={red}Red==` will be parsed in html tag as **`<span class="cm-custom-highlight cm-custom-highlight-red">`** in editor and **`<mark class="custom-highlight custom-highlight-red">`** in preview mode. This plugin bring some predefined CSS rules that automatically give customized color to the highlight. Those predifined colors are red, orange, yellow, green, cyan, blue, purple, pink, and accent (accent color of your app).
+
+For ease access, in the editor, the color button will appear after opening delimiter when the cursor or selection touches the highlight. Clicking on it shows colors menu and let the user choose the desired color (you can disable the color botton in settings, and thus will be hidden in the editor).
 
 > [!note]
-> For now, I don't include the alignment feature in blockquotes for several reasons.
+>
+> Currently, other colors can only be customized through CSS. In the future, I would like to add a feature that can customize and add other colors through the settings.
 
-### Customize Your Highlight Color
+### D. Context-aware Formatting
 
-You can customize your highlight color simply by adding color tag after opening delimiter with the following format:
+Any syntaxes that are written in the codespan, codeblock, math, comment, and wikilink don't apply the rules, so they  are treated according to their context. Or, in the nutshell, they aren't formatted. This corresponds to the many of markdown implementation, as well as that implemented in Obsidian.
 
-```markdown
-=={color tag}highlighted text==
-```
+In addition in the editor, any formatting above doesn't overlapping its block context. So if opening delimiter, i.e. double plus signs for insertion, was found in heading, and didn't meet any double plus signs but in the next line (which is paragraph for instance), then the second delimiter isn't treated as a closing for that opening.
 
-![ems7.gif](readme/ems7.gif)
+Example below can give some better understanding:
 
-For the moment, the supported colors are red, orange, yellow, green, cyan, blue, purple, pink (there is also your accent color). If you don't want to use custom colors you can let the highlighted text without color tag (like this: `==default highlighting==`).
+Markdown:
+> ```
+> # Heading ++1
+> The paragraph.++
+> 
+> Another ++paragraph
+> > Blockquote++
+> 
+> 1. ++List
+> 2. another list++
+> 3. another ++list
+> lazy continuation++
+> ```
 
-```markdown
-=={red}Red== =={orange}Orange== =={yellow}Yellow== =={green}Green== =={cyan}Cyan== =={blue}Blue== =={purple}Purple== =={pink}Pink== =={accent}Your accent== ==Default==
-```
+Expected result:
+> <h1>Heading ++1</h1>
+> The paragraph.++
+> 
+> Another ++paragraph
+> <blockquote>Blockquote++</blockquote>
+> 
+> <ol><li>++List</li>
+> <li>another list++</li>
+> <li>another <u>list
+> <br>lazy continuation</u></li></ol>
 
-This will be shown:
-
-![ems8.png](readme/ems8.png)
-
-Tired of retyping the color tag, you can change the highlight color by hovering over the color button and selecting any color you want (you can also remove the highlight).
-
-![ems9.gif](readme/ems9.gif)
-
-### Discord-Flavoured Spoiler
-
-Inspired by discord, you can create **spoilers** by wrapping text with `||`.  In live-preview mode, spoilers can be revealed by hovering over them. Whereas in view mode, spoilers are revealed by clicking on them. Just like previous inline-formatting, the backslash can also be applied to escape delimiters. 
-
-```markdown
-||your spoiler||
-```
-
-![ems10.gif](readme/ems10.gif)
+---
 
 ## Features to be Implemented in The Future
 
-- [ ] Enable/disable formatting in settings
+- [x] Enable/disable formatting in settings
+- [x] Applicable on mobile
+- [ ] Fixing paragraph alignment bug
 - [ ] Customize formatting styles and highlighting colors
 - [ ] Applying syntax quickly using shortcuts and context menu
 - [ ] More syntaxes, if necessary
 
-## Known Issues
+## Other Known Issues
 
-- Cannot escape spoilers that are inside table cells
-- The syntax in the heading is treated as normal text in the outline
-- Syntax is not properly parsed in post-processed codeblocks such as Admonition
+- Cannot escape spoilers that are inside table cells (in source mode)
 
 Feel free to let me know if you find any bugs...
 
 ## Credit
 
 Thanks to:
+- [Pandoc](https://pandoc.org/MANUAL.html) for the idea of superscript and subscript,
+- [CommonMark](https://spec.commonmark.org/) and [Github Flavored Markdown](https://github.github.com/gfm/) for the markdown specification.
+- [Discord](https://discord.com/) for the spoiler idea.
 - [Superschnizel](https://github.com/Superschnizel/obisdian-fast-text-color) for interactive menu idea,
 - [Mara-Li](https://github.com/Mara-Li/obsidian-regex-mark) for some code snippets,
 - [marcel-goldammer](https://github.com/marcel-goldammer/obsidian-keyword-highlighter),

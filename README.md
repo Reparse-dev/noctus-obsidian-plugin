@@ -4,7 +4,7 @@ Provides some alternatives for inline formatting using non-standard syntaxes ins
 
 You can easily create text that is <u>underlined</u>, <sup>superscripted</sup>, or <sub>subscripted</sub> without any pain of writing html tags. And don't forget, this plugin supports both modes: editor mode and preview mode.
 
-![ems0.gif](readme/ems0.gif)
+![formattings.gif](docs/media/formattings.gif)
 
 ## Features
 
@@ -158,6 +158,8 @@ Color of each highlight can be customized by adding color tag exactly after its 
 Valid color tag will be added in the highlight classes, so `=={red}Red==` will be parsed in html tag as **`<span class="cm-custom-highlight cm-custom-highlight-red">`** in editor and **`<mark class="custom-highlight custom-highlight-red">`** in preview mode. This plugin bring some predefined CSS rules that automatically give customized color to the highlight. Those predifined colors are red, orange, yellow, green, cyan, blue, purple, pink, and accent (accent color of your app).
 
 For ease access, in the editor, the color button will appear after opening delimiter when the cursor or selection touches the highlight. Clicking on it shows colors menu and let the user choose the desired color (you can disable the color botton in settings, and thus will be hidden in the editor).
+
+![custom-highlight.gif](docs/media/custom-highlight.gif)
 
 > [!note]
 >

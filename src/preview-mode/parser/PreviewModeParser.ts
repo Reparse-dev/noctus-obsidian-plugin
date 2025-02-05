@@ -34,9 +34,9 @@ export class PreviewModeParser {
                 if (this.isSkipped(this.curNode)) {
                     this.resolve(Format.SUPERSCRIPT);
                     this.resolve(Format.SUBSCRIPT);
-                } else {
+                } else if (this.curNode.textContent) {
                     this.parsingQueue.push(new PreviewModeParser(this.curNode, this.parsingQueue));
-                    if (/\s/.test(this.curNode.textContent ?? "")) {
+                    if (/\s/.test(this.curNode.textContent)) {
                         this.resolve(Format.SUPERSCRIPT);
                         this.resolve(Format.SUBSCRIPT);
                     }

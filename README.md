@@ -15,7 +15,7 @@ This plugin has four main features:
 3. Custom highlight color.
 4. Context-aware formatting.
 
-> [!note]
+> [!NOTE]
 > As it should be, the syntax will not be parsed if it is inside inline-code, codeblock, inline-math, mathblock, and internal links. Instead, they will still be styled by those syntaxes if they are inside them.
 
 ### A. Inline Formatting
@@ -122,29 +122,29 @@ It's will be rendered like this:
 > <p> !!center!!will not be centered</p>
 > </div>
 
-> [!caution] Known bug
->
-> In editor mode, each line depends on itself, so you must type alignment tag to get it be aligned. However, in preview mode, paragraph can consist more than one line. Accordingly, only tag that located at the first line of the paragraph (if it consists more than a line) will be treated as it is, and the others will act as a regular text.
->
-> So, this markdown
->
-> ```
-> !!center!!aligned to the center in both modes
-> !!right!!aligned to the right in editor, to the center in preview
+#### Caution
+
+In editor mode, each line depends on itself, so you must type alignment tag to get it be aligned. However, in preview mode, paragraph can consist more than one line. Accordingly, only tag that located at the first line of the paragraph (if it consists more than a line) will be treated as it is, and the others will act as a regular text.
+
+So, this markdown
+
+```
+!!center!!aligned to the center in both modes
+!!right!!aligned to the right in editor, to the center in preview
+not being aligned in editor (or aligned to its initial), aligned to center in preview
+```
+
+will be rendered in editor like this:
+> <p style="text-align: center">aligned to the center in both modes</p>
+> <p style="text-align: right">aligned to the right in editor, to the center in preview</p>
 > not being aligned in editor (or aligned to its initial), aligned to center in preview
-> ```
-> 
-> will be rendered in editor like this:
-> > <p style="text-align: center">aligned to the center in both modes</p>
-> > <p style="text-align: right">aligned to the right in editor, to the center in preview</p>
-> > not being aligned in editor (or aligned to its initial), aligned to center in preview
-> 
-> and in preview like this:
-> > <p style="text-align: center">
-> > aligned to the center in both modes<br>
-> > !!right!!aligned to the right in editor, to the center in preview<br>
-> > not being aligned in editor (or aligned to its initial), aligned to center in preview<br>
-> > </p>
+
+and in preview like this:
+> <p style="text-align: center">
+> aligned to the center in both modes<br>
+> !!right!!aligned to the right in editor, to the center in preview<br>
+> not being aligned in editor (or aligned to its initial), aligned to center in preview<br>
+> </p>
 
 ### C. Custom Highlight Color
 

@@ -9,6 +9,7 @@ export function getContextFromNode(node: SyntaxNode) {
         if (node.parent!.name == "Document") { return context }
         node = node.parent!;
     }
+    // 8 is the length of "HyperMD-" string
     if (nodeName.startsWith("hr", 8)) {
         context = LineCtx.HR_LINE;
     } else if (nodeName.startsWith("header", 8)) {
@@ -17,7 +18,7 @@ export function getContextFromNode(node: SyntaxNode) {
         context = LineCtx.BLOCKQUOTE;
     } else if (nodeName.startsWith("codeblock", 8)) {
         context = LineCtx.CODEBLOCK;
-    } else if (nodeName.startsWith("list")) {
+    } else if (nodeName.startsWith("list", 8)) {
         if (nodeName.includes("nobullet")) {
             context = LineCtx.LIST;
         } else {

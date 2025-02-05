@@ -78,7 +78,7 @@ export class SettingTab extends PluginSettingTab {
             .setName("Highlight color button")
             .setDesc("Display button after highlight opening delimiter, used to open a color menu for quick customizing by clicking on it.")
             .addToggle((toggle) => {
-                toggle.setValue(settings.editorEscape);
+                toggle.setValue(settings.colorButton);
                 toggle.onChange((val) => { settings.colorButton = val; this.plugin.saveSettings() });
             });
         new Setting(containerEl)

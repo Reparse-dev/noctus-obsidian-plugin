@@ -38,8 +38,8 @@ export class ColorButton extends WidgetType {
 				}
 			});
 			this.menu = new Menu();
-            this.menu.dom.addClass("cm-highlight-colors-modal");
-			PredefinedColors.forEach((color) => {
+            this.menu.dom.addClass("highlight-colors-modal");
+			PREDEFINED_COLORS.forEach((color) => {
 				this.menu.addItem((item) => {
 					item
 						.setTitle(color)

@@ -39,34 +39,34 @@ body.theme-dark {
     }
 }
 
-.cm-custom-highlight-red, .markdown-rendered mark.custom-highlight-red, .cm-item-red>.menu-item-title {
+.cm-custom-highlight-red, .markdown-rendered mark.custom-highlight-red, .menu-item-red>.menu-item-title {
     background-color: rgba(var(--color-red-rgb), var(--hl-transparency));
 }
-.cm-custom-highlight-orange, .markdown-rendered mark.custom-highlight-orange, .cm-item-orange>.menu-item-title {
+.cm-custom-highlight-orange, .markdown-rendered mark.custom-highlight-orange, .menu-item-orange>.menu-item-title {
     background-color: rgba(var(--color-orange-rgb), var(--hl-transparency));
 }
-.cm-custom-highlight-yellow, .markdown-rendered mark.custom-highlight-yellow, .cm-item-yellow>.menu-item-title {
+.cm-custom-highlight-yellow, .markdown-rendered mark.custom-highlight-yellow, .menu-item-yellow>.menu-item-title {
     background-color: rgba(var(--color-yellow-rgb), var(--hl-transparency));
 }
-.cm-custom-highlight-green, .markdown-rendered mark.custom-highlight-green, .cm-item-green>.menu-item-title {
+.cm-custom-highlight-green, .markdown-rendered mark.custom-highlight-green, .menu-item-green>.menu-item-title {
     background-color: rgba(var(--color-green-rgb), var(--hl-transparency));
 }
-.cm-custom-highlight-cyan, .markdown-rendered mark.custom-highlight-cyan, .cm-item-cyan>.menu-item-title {
+.cm-custom-highlight-cyan, .markdown-rendered mark.custom-highlight-cyan, .menu-item-cyan>.menu-item-title {
     background-color: rgba(var(--color-cyan-rgb), var(--hl-transparency));
 }
-.cm-custom-highlight-blue, .markdown-rendered mark.custom-highlight-blue, .cm-item-blue>.menu-item-title {
+.cm-custom-highlight-blue, .markdown-rendered mark.custom-highlight-blue, .menu-item-blue>.menu-item-title {
     background-color: rgba(var(--color-blue-rgb), var(--hl-transparency));
 }
-.cm-custom-highlight-purple, .markdown-rendered mark.custom-highlight-purple, .cm-item-purple>.menu-item-title {
+.cm-custom-highlight-purple, .markdown-rendered mark.custom-highlight-purple, .menu-item-purple>.menu-item-title {
     background-color: rgba(var(--color-purple-rgb), var(--hl-transparency));
 }
-.cm-custom-highlight-pink, .markdown-rendered mark.custom-highlight-pink, .cm-item-pink>.menu-item-title {
+.cm-custom-highlight-pink, .markdown-rendered mark.custom-highlight-pink, .menu-item-pink>.menu-item-title {
     background-color: rgba(var(--color-pink-rgb), var(--hl-transparency));
 }
-.cm-custom-highlight-accent, .markdown-rendered mark.custom-highlight-accent, .cm-item-accent>.menu-item-title {
+.cm-custom-highlight-accent, .markdown-rendered mark.custom-highlight-accent, .menu-item-accent>.menu-item-title {
     background-color: hsl(var(--color-accent-hsl), var(--hl-transparency));
 }
-.cm-custom-highlight-default, .markdown-rendered mark.custom-highlight-default, .cm-item-default>.menu-item-title {
+.cm-custom-highlight-default, .markdown-rendered mark.custom-highlight-default, .menu-item-default>.menu-item-title {
     background-color: var(--text-highlight-bg);
 }
 

@@ -11,14 +11,15 @@ const PredefinedColors = ["red", "orange", "yellow", "green", "cyan", "blue", "p
 export class ColorButton extends WidgetType {
 	color: string;
     menu: Menu;
-	menuPos: { x: number, y: number };
-	colorTag: { from: number, to: number };
-    constructor(offset: number, color: string) {
+	colorTag: CharPos;
+	open: CharPos;
+	close: CharPos;
+    constructor(color: string, open: CharPos, close: CharPos) {
         super();
         this.color = color;
 		this.colorTag = color ?
-			{ from: offset, to: offset + color.length + 2 } :
-			{ from: offset, to: offset };
+			{ from: open.to, to: open.to + color.length + 2 } :
+			{ from: open.to, to: open.to };
     }
     eq(other: ColorButton) {
         return (
@@ -41,63 +42,66 @@ export class ColorButton extends WidgetType {
             this.menu.dom.addClass("highlight-colors-modal");
 			PREDEFINED_COLORS.forEach((color) => {
 				this.menu.addItem((item) => {
-					item
-						.setTitle(color)
-						.onClick(evt => {
-							view.dispatch({
-								changes: {
-									from: this.colorTag.from,
-									to: this.colorTag.to,
-									insert: color != "default" ? `{${color}}` : ""
-								}
-							});
-							if (color == "default") {
-								this.color = "";
-								this.colorTag.to = this.colorTag.from;
-							} else {
-								this.color = color;
-								this.colorTag.to = this.colorTag.from + color.length + 2;
-							}
-						})
-						.setIcon("palette")
-						.dom.addClass(`cm-item-${color || "default"}`);
-				})
+					item.setTitle(color[1]);
+					item.setIcon("palette");
+					item.dom.addClass(`menu-item-${color[0] || "default"}`);
+					item.onClick(() => { this.changeColor(view, color[0]) });
+				});
 			});
-			/* this.menu.addItem(item => {
-				item
-					.setTitle("Remove")
-					.setIcon("ban")
-					.onClick((evt) => {
-						view.dispatch({
-							changes: [{
-								from: this.colorTag.from,
-								to: this.colorTag.to,
-								insert: ''
-							}]
-						});
-						this.colorTag.from = this.colorTag.to = 0;
+			this.menu.addItem(item => {
+				item.setTitle("Remove");
+				item.setIcon("eraser");
+				item.dom.addClass("menu-item-remove-highlight");
+				item.onClick(() => {
+					view.dispatch({
+						changes: [{
+							from: this.open.from,
+							to: this.colorTag.to,
+							insert: ""
+						}, {
+							from: this.close.from,
+							to: this.close.to,
+							insert: ""
+						}]
 					});
-			}); */
-			this.showMenu(view, btn);
+				});
+			});
+			let app = view.state.facet(appFacet.reader),
+				menuCoord = { x: evt.clientX, y: evt.clientY + 10 };
+			if (app.workspace.getMostRecentLeaf()?.view.getViewType() == "canvas") {
+				let containerEl = (app.workspace.activeEditor as MarkdownView)?.containerEl;
+				if (containerEl) {
+					let containerCoord = containerEl.getBoundingClientRect();
+					menuCoord.x += containerCoord.x;
+					menuCoord.y += containerCoord.y;
+				}
+			}
+			this.menu.showAtPosition(menuCoord);
 		}
         return btn;
     }
-	showMenu(view: EditorView, btn: HTMLElement) {
-		let menu = this.menu;
-		view.requestMeasure({
-			read(view) {
-				let rect = btn.getBoundingClientRect();
-				return { x: rect.left, y: rect.bottom }
-			},
-			write(measure, view) {
-				menu.showAtPosition(measure);
-			},
+	adjustPos(length: number) {
+		this.colorTag.to += length;
+		this.close.from += length;
+		this.close.to += length;
+	}
+	changeColor(view: EditorView, color: string) {
+		view.dispatch({
+			changes: {
+				from: this.colorTag.from,
+				to: this.colorTag.to,
+				insert: color != "default" ? `{${color}}` : ""
+			}
 		});
+		let differ = color == "default" ?
+			this.colorTag.from - this.colorTag.to :
+			color.length + 2 - (this.colorTag.to - this.colorTag.from);
+		this.adjustPos(differ);
 	}
     ignoreEvent() {
         return false;
     }
-	static of(offset: number, color: string) {
-		return Decoration.widget({ widget: new ColorButton(offset, color) }).range(offset);
+	static of(color: string, open: CharPos, close: CharPos) {
+		return Decoration.widget({ widget: new ColorButton(color, open, close) }).range(open.to);
 	}
 }

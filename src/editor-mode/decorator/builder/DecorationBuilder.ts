@@ -44,7 +44,10 @@ export class DecorationBuilder {
                         color = doc.sliceString(mayBeColorTag.from + 1, mayBeColorTag.to - 1);
                         i++;
                     }
-                    let hlDeco = createHlDeco(color, { openLen: token.to - token.from });
+                    let hlDeco = createHlDeco(color, {
+                        open: { from: open.from, to: open.to } as CharPos,
+                        close: { from: close.from, to: close.to } as CharPos
+                    });
                     // highlight should be pushed in outer decorations
                     outerDecoRanges.push(hlDeco.range(open.from, close.to));
                     if (hasColorTag) {
@@ -98,8 +101,9 @@ export class DecorationBuilder {
             let type = val.spec.type as Format.HIGHLIGHT | Format.SPOILER;
             if (type == Format.HIGHLIGHT && this.parser.settings.colorButton) {
                 let color = val.spec.color as string,
-                    offset = from + (val.spec.openLen as number);
-                decoRanges.push(ColorButton.of(offset, color));
+                    open = (val.spec.open as CharPos),
+                    close = (val.spec.close as CharPos);
+                decoRanges.push(ColorButton.of(color, open, close));
             } else if (type == Format.SPOILER) {
                 decoRanges.push(RevealedSpoiler.range(from, to));
             }

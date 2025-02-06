@@ -13,6 +13,7 @@ export class Parser {
     private state: ParserState;
     private queue: TokenQueue = new TokenQueue();
     private reusedTokens: TokenGroup | undefined;
+    isReparsing: boolean;
     tokens: TokenGroup = [];
     lastParsed = { startToken: 0, endToken: 0 };
     settings: PluginSettings;
@@ -77,6 +78,7 @@ export class Parser {
         this.lastParsed.endToken = this.tokens.length;
     }
     applyChange(doc: Text, tree: Tree, oldTree: Tree, changes: ChangeSet) {
+        this.isReparsing = true;
         let changedRange = composeChanges(changes),
             offset = Math.min(oldTree.length, tree.length) + 1;
         if (changedRange) {

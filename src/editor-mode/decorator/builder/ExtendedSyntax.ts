@@ -53,17 +53,17 @@ export class ExtendedSyntax implements PluginValue {
         this.combine();
     }
     update(update: ViewUpdate) {
-        if (update.docChanged) {
+        if (update.docChanged || this.parser.isReparsing) {
             let { mainDecoRanges, outerDecoRanges, delimiterRanges } = this.builder.build(update.state);
             this.mainDecoSet = this.builder.updateSet(update, this.mainDecoSet, mainDecoRanges);
             this.outerDecoSet = this.builder.updateSet(update, this.outerDecoSet, outerDecoRanges);
             this.delimiterSet = this.builder.updateSet(update, this.delimiterSet, delimiterRanges);
         }
-        if (update.docChanged || update.selectionSet) {
+        if (update.docChanged || update.selectionSet || this.parser.isReparsing) {
             this.supplementalSet = this.builder.getSupplemental(update.state, this.outerDecoSet);
         }
         if (update.state.field(editorLivePreviewField)) {
-            if (update.docChanged || update.selectionSet || this.noOmit) {
+            if (update.docChanged || update.selectionSet || this.parser.isReparsing || this.noOmit) {
                 this.omittedSet = this.omitter.omit(update.state, this.delimiterSet);
             }
             this.noOmit = false;
@@ -72,6 +72,7 @@ export class ExtendedSyntax implements PluginValue {
             this.noOmit = true;
         }
         this.combine();
+        this.parser.isReparsing = false;
     }
     combine() {
         this.combinedSet = RangeSet.join([

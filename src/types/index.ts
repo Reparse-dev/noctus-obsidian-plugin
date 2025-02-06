@@ -89,3 +89,5 @@ export type PluginSettings = {
     editorEscape: boolean;
     colorButton: boolean;
 }
+
+export type CharPos = { from: number, to: number };

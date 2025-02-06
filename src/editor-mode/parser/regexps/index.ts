@@ -1,7 +1,7 @@
 import { ShifterNodeConfigs } from "src/editor-mode/parser/configs"
 
 export const SEMANTIC_INTERFERER_RE = /(?:codeblock|html|math)-(?:begin|end)|comment-(?:start|end)|cdata|tag$/;
-export const SKIPPED_NODE_RE = /table|code|formatting|escape|html|math|tag|url|barelink|atom|comment|string|meta|frontmatter|hr(?!\w)/;
+export const SKIPPED_NODE_RE = /table|code|formatting|escape|html|math|tag|url|barelink|atom|comment|string|meta|frontmatter|internal-link|hr(?!\w)/;
 export const COLOR_TAG_RE = /\{[a-z0-9-]+\}/iy;
 export const SHIFTER_RE = (() => {
     let queries = "";

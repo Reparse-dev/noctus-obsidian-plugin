@@ -4,7 +4,7 @@ import { Parser } from "src/editor-mode/parser";
 import { Format, TokenRole, TokenStatus } from "src/enums";
 import { createHlDeco } from "src/editor-mode/decorator/utils";
 import { AlignDeco, AlignMarkDeco, ColorTagDeco, ContentDeco, DelimDeco, RevealedSpoiler } from "src/editor-mode/decorator/decorations";
-import { AlignFormat, MainFormat } from "src/types";
+import { AlignFormat, CharPos, MainFormat } from "src/types";
 import { ColorButton } from "src/editor-mode/decorator/widgets";
 
 /** Decoration builder (excludes omitted delimiter), should be attached to `ExtendedSyntax` */

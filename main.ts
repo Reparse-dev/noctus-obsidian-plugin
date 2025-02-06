@@ -9,6 +9,7 @@ import { DEFAULT_SETTINGS } from "src/settings";
 import { SettingTab } from "src/settings/interface";
 import { settingsFacet } from "src/editor-mode/facets";
 import { configureDelimLookup } from "src/utils";
+import { appFacet } from "src/editor-mode/facets/appFacet";
 
 export default class ExtendedMarkdownSyntax extends Plugin {
     settings: PluginSettings;

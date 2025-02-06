@@ -45,7 +45,7 @@ export class ColorButton extends WidgetType {
         let btn = document.createElement("span");
         btn.setAttribute("aria-hidden", "true");
         btn.className = "cm-highlight-color-btn";
-        btn.onclick = evt => {
+        btn.onclick = (evt) => {
 			view.dispatch({
 				selection: {
 					anchor: this.colorTag.from,

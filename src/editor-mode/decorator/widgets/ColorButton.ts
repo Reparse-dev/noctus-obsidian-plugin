@@ -1,7 +1,21 @@
 import { WidgetType, EditorView, Decoration } from "@codemirror/view"
-import { Menu } from "obsidian";
+import { MarkdownView, Menu } from "obsidian";
+import { appFacet } from "src/editor-mode/facets";
+import { CharPos } from "src/types";
 
-const PredefinedColors = ["red", "orange", "yellow", "green", "cyan", "blue", "purple", "pink", "accent", "default"];
+// first is the text in the color tag, second is displayed text on menu
+const PREDEFINED_COLORS = [
+	["red", "Red"],
+	["orange", "Orange"],
+	["yellow", "Yellow"],
+	["green", "Green"],
+	["cyan", "Cyan"],
+	["blue", "Blue"],
+	["purple", "Purple"],
+	["pink", "Pink"],
+	["accent", "Accent"],
+	["default", "Default"],
+];
 
 /**
  * These code snippets are taken from 

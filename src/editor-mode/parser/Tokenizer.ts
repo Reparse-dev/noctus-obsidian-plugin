@@ -39,7 +39,7 @@ export const Tokenizer = {
         state.tokens.push({
             type,
             status: TokenStatus.ACTIVE,
-            role: TokenRole.SINGLE,
+            role: TokenRole.BLOCK_TAG,
             from: lineFrom,
             to: lineFrom + length,
             pointer: state.tokens.length,
@@ -115,17 +115,17 @@ export const Tokenizer = {
         return true;
     },
     colorTag(state: ParserState) {
-        // color tag should be indexed right after mark content,
-        // therefore its index should be plus two of mark opening
+        // color tag should be indexed right after highlight content,
+        // therefore its index should be plus two of highlight opening
         // index
         COLOR_TAG_RE.lastIndex = state.offset;
         let match = state.lineStr.match(COLOR_TAG_RE);
         if (match) {
             let tagLen = match[0].length,
                 token: Token = {
-                    type: Format.HIGHLIGHT_COLOR_TAG,
+                    type: Format.COLOR_TAG,
                     status: TokenStatus.ACTIVE,
-                    role: TokenRole.TAG,
+                    role: TokenRole.INLINE_TAG,
                     from: state.gOffset,
                     to: state.gOffset + tagLen,
                     pointer: state.tokens.length,

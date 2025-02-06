@@ -101,7 +101,7 @@ export const ContentDeco = {
 
 export const ColorTagDeco = Decoration.mark({
     class: "cm-color-tag",
-    type: Format.HIGHLIGHT_COLOR_TAG,
+    type: Format.COLOR_TAG,
     omitted: true
 });
 

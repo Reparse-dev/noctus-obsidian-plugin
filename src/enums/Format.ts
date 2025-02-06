@@ -21,5 +21,5 @@ export enum Format {
     /** Highlight */
     HIGHLIGHT,
     /** Highlight color tag */
-    HIGHLIGHT_COLOR_TAG,
+    COLOR_TAG,
 }

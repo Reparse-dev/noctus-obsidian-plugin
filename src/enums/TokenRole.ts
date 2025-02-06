@@ -9,11 +9,11 @@ export enum TokenRole {
      * Act as a metadata stored in a token sequence.
      * In this case, it's only used as a highlight color tag
      */
-    TAG,
+    INLINE_TAG,
     /** Content of a token sequence */
     CONTENT,
     /** Closing delimiter */
     CLOSE,
-    /** Stand-alone token that isn't a part of any sequence */
-    SINGLE
+    /** Act as a metadata for the block element */
+    BLOCK_TAG
 }

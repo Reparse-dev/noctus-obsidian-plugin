@@ -23,7 +23,7 @@ export class RangeOmitter {
             };
         delimiterSet.between(0, state.doc.length, (from, to, val) => {
             let type = val.spec.type as Format;
-            if (type == Format.HIGHLIGHT_COLOR_TAG || type <= Format.ALIGN_JUSTIFY) {
+            if (type == Format.COLOR_TAG || type <= Format.ALIGN_JUSTIFY) {
                 while (i + 1 < selectRanges.length && selectRanges[i].to < from) { i++ }
                 if (selectRanges[i].from > to || selectRanges[i].to < from) {
                     omittedRanges.push(HiddenWidget.of(from, to, val));

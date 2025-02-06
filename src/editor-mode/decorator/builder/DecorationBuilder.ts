@@ -35,9 +35,10 @@ export class DecorationBuilder {
             if (token.role == TokenRole.OPEN) {
                 if (token.type == Format.HIGHLIGHT) {
                     let color = "",
-                        mayBeColorTag = tokens[i + 2],
+                        open = token,
                         close = tokens[i + token.size - 1],
-                        hasColorTag = mayBeColorTag?.type == Format.HIGHLIGHT_COLOR_TAG;
+                        mayBeColorTag = tokens[i + 2],
+                        hasColorTag = mayBeColorTag?.type == Format.COLOR_TAG;
                     // gets color tag
                     if (hasColorTag) {
                         color = doc.sliceString(mayBeColorTag.from + 1, mayBeColorTag.to - 1);
@@ -45,7 +46,7 @@ export class DecorationBuilder {
                     }
                     let hlDeco = createHlDeco(color, { openLen: token.to - token.from });
                     // highlight should be pushed in outer decorations
-                    outerDecoRanges.push(hlDeco.range(token.from, close.to));
+                    outerDecoRanges.push(hlDeco.range(open.from, close.to));
                     if (hasColorTag) {
                         delimiterRanges.push(ColorTagDeco.range(mayBeColorTag.from, mayBeColorTag.to));
                     }
@@ -60,7 +61,7 @@ export class DecorationBuilder {
                 }
             } else if (token.role == TokenRole.CLOSE && token.type != Format.HIGHLIGHT) {
                 delimiterRanges.push(DelimDeco[token.type as MainFormat].range(token.from, token.to));
-            } else if (token.role == TokenRole.SINGLE) {
+            } else if (token.role == TokenRole.BLOCK_TAG) {
                 delimiterRanges.push(AlignMarkDeco[token.type as AlignFormat].range(token.from, token.to));
                 mainDecoRanges.push(AlignDeco[token.type as AlignFormat].range(token.from, token.from));
             }

@@ -45,7 +45,7 @@ export class TokenQueue {
         return !!this.open[type];
     }
     push(token: Token) {
-        if (token.type < Format.INSERTION || token.type == Format.HIGHLIGHT_COLOR_TAG) {
+        if (token.type < Format.INSERTION || token.type == Format.COLOR_TAG) {
             throw TypeError("Type of token must be one of MainFormat");
         }
         // Used as key to access certain queued token

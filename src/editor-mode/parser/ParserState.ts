@@ -96,7 +96,7 @@ export class ParserState {
         return null;
     }
     nextLine(skipBlankLine = true) {
-        if (this.linePos == this.maxLine) {
+        if (this.linePos >= this.maxLine) {
             this.queue.resolveAll();
             return null;
         }
@@ -106,7 +106,7 @@ export class ParserState {
         if (skipBlankLine) {
             if (this.isBlankLine()) {
                 this.queue.resolveAll(this.line.to);
-                while (this.linePos != this.maxLine) {
+                while (this.linePos < this.maxLine) {
                     this.line = this.doc.line(this.linePos + 1);
                     if (!this.isBlankLine()) { break }
                 }

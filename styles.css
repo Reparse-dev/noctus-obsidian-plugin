@@ -97,6 +97,9 @@ mark {
             padding-block: 1px;
             border-radius: 2px;
         }
+        &.menu-item-remove-highlight {
+            color: rgb(var(--color-red-rgb));
+        }
     }
 }
 

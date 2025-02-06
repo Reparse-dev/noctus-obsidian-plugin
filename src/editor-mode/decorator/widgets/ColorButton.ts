@@ -101,10 +101,3 @@ export class ColorButton extends WidgetType {
 		return Decoration.widget({ widget: new ColorButton(offset, color) }).range(offset);
 	}
 }
-
-/* class ColorMenu extends Menu {
-	constructor() {
-		super();
-	}
-
-} */

@@ -23,14 +23,14 @@ const PREDEFINED_COLORS = [
  * with some modifications.
 */
 export class ColorButton extends WidgetType {
-	color: string;
     menu: Menu;
 	colorTag: CharPos;
 	open: CharPos;
 	close: CharPos;
     constructor(color: string, open: CharPos, close: CharPos) {
         super();
-        this.color = color;
+		this.open = open;
+		this.close = close;
 		this.colorTag = color ?
 			{ from: open.to, to: open.to + color.length + 2 } :
 			{ from: open.to, to: open.to };

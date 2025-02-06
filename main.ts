@@ -19,6 +19,7 @@ export default class ExtendedMarkdownSyntax extends Plugin {
         this.addSettingTab(new SettingTab(this.app, this));
         configureDelimLookup(this.settings);
         this.registerEditorExtension([
+            appFacet.of(this.app),
             settingsFacet.of(this.settings),
             parserField,
             editorExtendedSyntax,

@@ -2,7 +2,7 @@
 
 Provides some alternatives for inline formatting using non-standard syntaxes instead of using html tags, such as underline, superscript, and much more.
 
-You can easily create text that is <u>underlined</u>, <sup>superscripted</sup>, or <sub>subscripted</sub> without any pain of writing html tags. And don't forget, this plugin supports both modes: editor mode and preview mode.
+You can easily create text that is <ins>underlined</ins>, <sup>superscripted</sup>, or <sub>subscripted</sub> without any pain of writing html tags. And don't forget, this plugin supports both modes: editor mode and preview mode.
 
 ![formattings.gif](docs/media/formattings.gif)
 
@@ -24,7 +24,7 @@ There is four formatting types that currently developed in this plugin: **insert
 
 | Type        | Syntax              | Result                                             |
 | ----------- | ------------------- | -------------------------------------------------- |
-| insertion   | `++your text++`     | <u>your text</u>                                   |
+| insertion   | `++your text++`     | <ins>your text</ins>                                   |
 | spoiler     | `\|\|your text\|\|` | <span style="background: #2e2e2e">your text</span> |
 | superscript | `^your-text^`       | <sup>your-text</sup>                               |
 | subscript   | `~your-text~`       | <sub>your-text</sub>                               |
@@ -69,7 +69,7 @@ For better understanding, the table below can give some example applying those r
 
 the expected result is:
 
->  <u>insertion</u> +not insertion+ <span style="background: #2e2e2e">spoiler</span> |||not spoiler||||
+>  <ins>insertion</ins> +not insertion+ <span style="background: #2e2e2e">spoiler</span> |||not spoiler||||
 
 #### 3. Rules for Superscript and Subscript
 
@@ -196,8 +196,8 @@ Expected result:
 > 
 > <ol><li>++List</li>
 > <li>another list++</li>
-> <li>another <u>list
-> <br>lazy continuation</u></li></ol>
+> <li>another <ins>list
+> <br>lazy continuation</ins></li></ol>
 
 ---
 

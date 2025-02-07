@@ -1,8 +1,8 @@
 {
 	"id": "extended-markdown-syntax",
 	"name": "Extended Markdown Syntax",
-	"version": "2.0.1",
-	"minAppVersion": "0.15.0",
+	"version": "2.0.2",
+	"minAppVersion": "1.7.4",
 	"description": "Extend your markdown syntax using delimiters instead of HTML tags, such as underlining, superscript, subscript, highlighting, aligning.",
 	"author": "Kotaindah55 (Sheva Ihza)",
 	"isDesktopOnly": false

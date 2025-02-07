@@ -15,6 +15,14 @@ export class PreviewExtendedSyntax {
     private decorate(container: HTMLElement) {
         let targetedEls = container.querySelectorAll(this.query),
             parsingQueue: PreviewModeParser[] = [];
+        if (container.classList.contains("table-cell-wrapper")) {
+            new PreviewModeParser(container, parsingQueue).streamParse();
+            for (let i = 0; i < parsingQueue.length; i++) {
+                parsingQueue[i].streamParse();
+                if (i >= 100) { throw Error(`${parsingQueue}`) }
+            }
+            return;
+        }
         for (let i = 0; i < targetedEls.length; i++) {
             new PreviewModeParser(targetedEls[i], parsingQueue).streamParse();
             for (let i = 0; i < parsingQueue.length; i++) {
@@ -26,7 +34,9 @@ export class PreviewExtendedSyntax {
     }
     private toBeDecorated(container: HTMLElement) {
         let firstChild = container.firstElementChild;
-        if (firstChild && (
+        if (
+            container.classList.contains("table-cell-wrapper") ||
+            firstChild && (
             firstChild instanceof HTMLParagraphElement ||
             firstChild instanceof HTMLTableElement ||
             firstChild instanceof HTMLUListElement ||

@@ -201,6 +201,19 @@ Expected result:
 
 ---
 
+## FAQ's
+
+### Is it working on the table and callout?
+Of course it's working on both.
+
+### Does the plugin work on large files?
+I tested it on a 250kB file and it's still working. This plugin also uses parser that implemented simple incremental and partial parsing, so you don't need to worry about facing with big files. But if you still have some issues with it, feel free to inform me what the issues you are struggling with.
+
+### Can I use another color for highlights, other than those specified?
+For sure. But, for the moment, you can only do color customizing through the CSS. Use selector `.cm-custom-highlight.cm-custom-highlight-YOURCOLOR, .custom-highlight custom-highlight-YOURCOLOR` in the CSS rule (change "YOURCOLOR" with the text you will use in the color tag) and set the `background-color` as you desire.
+
+I have plan in the future to implement it in the settings.
+
 ## Features to be Implemented in The Future
 
 - [x] Enable/disable formatting in settings

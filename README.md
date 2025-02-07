@@ -15,9 +15,6 @@ This plugin has four main features:
 3. Custom highlight color.
 4. Context-aware formatting.
 
-> [!NOTE]
-> As it should be, the syntax will not be parsed if it is inside inline-code, codeblock, inline-math, mathblock, and internal links. Instead, they will still be styled by those syntaxes if they are inside them.
-
 ### A. Inline Formatting
 
 There is four formatting types that currently developed in this plugin: **insertion** (underline), **Discord-flavoured spoiler**, and **Pandoc-flavoured superscript and subscript**.

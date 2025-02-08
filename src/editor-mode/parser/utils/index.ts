@@ -7,3 +7,4 @@ export * from "./hasInterferer";
 export * from "./retrieveDelimSpec";
 export * from "./validateDelim";
 export * from "./disableEscape";
+export * from "./isBlankLine";

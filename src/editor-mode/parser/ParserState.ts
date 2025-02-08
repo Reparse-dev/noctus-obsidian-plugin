@@ -13,6 +13,7 @@ export class ParserState {
     cursor: TreeCursor | null;
     line: Line;
     /** block start */
+    blkStart: boolean;
     maxLine: number;
     offset: number;
     tokens: TokenGroup;
@@ -105,6 +106,7 @@ export class ParserState {
         this.resolveContext();
         if (skipBlankLine) {
             if (this.isBlankLine()) {
+                this.blkStart = true;
                 this.queue.resolveAll(this.line.to);
                 while (this.linePos < this.maxLine) {
                     this.line = this.doc.line(this.linePos + 1);
@@ -214,7 +216,10 @@ export class ParserState {
                 offset -= 1;
         }
         if (!this.offset) {
-            if (toBeResolved) { this.queue.resolve(NonHighlightFormats, offset) }
+            if (toBeResolved) {
+                this.queue.resolve(NonHighlightFormats, offset);
+                this.blkStart = true;
+            }
             if (includesHl) { this.queue.resolve([Format.HIGHLIGHT], offset) }
         }
         if (isSkip) { this.skipCursorRange() }

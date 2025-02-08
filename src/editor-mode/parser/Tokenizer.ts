@@ -59,8 +59,8 @@ export const Tokenizer = {
                 type,
                 status: TokenStatus.PENDING,
                 role,
-                from: state.gOffset,
-                to: state.gOffset + length,
+                from: state.globalOffset,
+                to: state.globalOffset + length,
                 pointer: state.queue.getOpen(type)?.pointer ?? state.tokens.length,
                 size: 2
             };
@@ -96,7 +96,7 @@ export const Tokenizer = {
     },
     content(state: ParserState, type: MainFormat) {
         // content should be indexed right after its opening delimiter
-        let from = state.gOffset;
+        let from = state.globalOffset;
         let token: Token = {
             type,
             status: TokenStatus.PENDING,
@@ -126,8 +126,8 @@ export const Tokenizer = {
                     type: Format.COLOR_TAG,
                     status: TokenStatus.ACTIVE,
                     role: TokenRole.INLINE_TAG,
-                    from: state.gOffset,
-                    to: state.gOffset + tagLen,
+                    from: state.globalOffset,
+                    to: state.globalOffset + tagLen,
                     pointer: state.tokens.length,
                     size: 1
                 };

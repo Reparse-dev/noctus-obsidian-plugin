@@ -39,7 +39,7 @@ export class Parser {
         if (prevLine = this.state.prevLine) {
             state.setContext(state.getContext(prevLine));
         }
-        if (hlOpen && state.gOffset == hlOpen.to) {
+        if (hlOpen && state.globalOffset == hlOpen.to) {
             Tokenizer.colorTag(state);
         }
         state.resolveContext();
@@ -167,7 +167,7 @@ export class Parser {
             lastToken.from >= this.state.line.from &&
             this.queue.isQueued(Format.HIGHLIGHT)
         ) {
-            this.state.setGOffset(lastToken.from);
+            this.state.setGlobalOffset(lastToken.from);
         } else {
             return false;
         }

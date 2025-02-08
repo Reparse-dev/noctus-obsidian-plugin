@@ -69,7 +69,7 @@ export class TokenQueue {
      * will be stated as `ACTIVE` or `INACTIVE` depending on presence of
      * closing delimiter in the queue.
      */
-    resolve(types: MainFormat[], to = this.state.gOffset) {
+    resolve(types: MainFormat[], to = this.state.globalOffset) {
         for (let type of types) {
             let status: TokenStatus,
                 open = this.open[type],
@@ -94,7 +94,7 @@ export class TokenQueue {
         }
     }
     /** Resolve all existing token in the queue. Often used when facing boundary or a blank line. */
-    resolveAll(to = this.state.gOffset) {
+    resolveAll(to = this.state.globalOffset) {
         this.resolve([Format.INSERTION, Format.SPOILER, Format.SUPERSCRIPT, Format.SUBSCRIPT, Format.HIGHLIGHT], to);
     }
     clear() {

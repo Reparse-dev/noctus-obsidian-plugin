@@ -36,7 +36,7 @@ export class ParserState {
         ) { this.offset = 0 }
     }
     /** global offset */
-    get gOffset() {
+    get globalOffset() {
         return this.offset + this.line.from;
     }
     get linePos() {
@@ -73,13 +73,13 @@ export class ParserState {
         }
         return true;
     }
-    setGOffset(gOffset: number) {
-        if (gOffset > this.doc.length) {
+    setGlobalOffset(globalOffset: number) {
+        if (globalOffset > this.doc.length) {
             this.line = this.doc.line(this.doc.lines);
             this.offset = this.line.to;
         } else {
-            this.line = this.doc.lineAt(gOffset);
-            this.offset = gOffset - this.line.from;
+            this.line = this.doc.lineAt(globalOffset);
+            this.offset = globalOffset - this.line.from;
         }
     }
     isSpace(side: -1 | 0 | 1 = 0) {
@@ -128,10 +128,10 @@ export class ParserState {
         return false;
     }
     cursorPos(endSide: 0 | -1 = 0): "after" | "before" | "touch" | null {
-        let offset = this.gOffset;
+        let globalOffset = this.globalOffset;
         if (!this.cursor) { return null }
-        if (offset < this.cursor.from) { return "after" }
-        if (offset > this.cursor.to + endSide) { return "before" }
+        if (globalOffset < this.cursor.from) { return "after" }
+        if (globalOffset > this.cursor.to + endSide) { return "before" }
         return "touch";
     }
     processCursor() {

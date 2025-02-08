@@ -5,7 +5,7 @@ import { TokenQueue } from "src/editor-mode/parser";
 import { Format, LineCtx, SettingOpt1 } from "src/enums";
 import { NonHighlightFormats, SpaceRestrictedFormats } from "src/shared-configs";
 import { SKIPPED_NODE_RE } from "src/editor-mode/parser/regexps";
-import { findNode, getContextFromNode } from "src/editor-mode/parser/utils";
+import { findNode, getContextFromNode, isBlankLine } from "src/editor-mode/parser/utils";
 
 export class ParserState {
     doc: Text;
@@ -120,7 +120,7 @@ export class ParserState {
         return this.line.number >= this.doc.lines;
     }
     isBlankLine() {
-        return !this.lineStr.trimEnd();
+        return isBlankLine(this.line);
     }
     nextCursor(enter = true) {
         if (this.cursor) {

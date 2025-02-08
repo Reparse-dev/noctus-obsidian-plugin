@@ -96,7 +96,7 @@ export class ParserState {
         }
         return null;
     }
-    nextLine(skipBlankLine = true) {
+    advanceLine(skipBlankLine = true) {
         if (this.linePos >= this.maxLine) {
             this.queue.resolveAll();
             return null;

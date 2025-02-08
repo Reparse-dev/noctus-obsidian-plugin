@@ -31,6 +31,15 @@ export class ParserState {
         this.cursor = this.tree.cursor();
         this.settings = config.settings;
         this.nextCursor();
+        // if previous line is a blank line or the
+        // current line is the first line, then the current one
+        // should be a block start
+        let prevLine = this.prevLine;
+        if (prevLine) {
+            this.blkStart = isBlankLine(prevLine);
+        } else {
+            this.blkStart = true;
+        }
         if (
             (!this.lastToken || this.lastToken.to < this.line.from) &&
             this.lineStr[0] == "!" && this.offset < 11

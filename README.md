@@ -123,7 +123,7 @@ It's will be rendered like this:
 
 In editor mode, each line depends on itself, so you must type alignment tag to get it be aligned. However, in preview mode, paragraph can consist more than one line. Accordingly, only tag that located at the first line of the paragraph (if it consists more than a line) will be treated as it is, and the others will act as a regular text.
 
-So, this markdown
+So, this Markdown
 
 ```
 !!center!!aligned to the center in both modes
@@ -164,7 +164,7 @@ For ease access, in the editor, the color button will appear after opening delim
 
 ### D. Context-aware Formatting
 
-Any syntaxes that are written in the codespan, codeblock, math, comment, and wikilink don't apply the rules, so they  are treated according to their context. Or, in the nutshell, they aren't formatted. This corresponds to the many of markdown implementation, as well as that implemented in Obsidian.
+Any syntaxes that are written in the codespan, codeblock, math, comment, and wikilink don't apply the rules, so they  are treated according to their context. Or, in the nutshell, they aren't formatted. This corresponds to the many of Markdown implementation, as well as that implemented in Obsidian.
 
 In addition in the editor, any formatting above doesn't overlapping its block context. So if opening delimiter, i.e. double plus signs for insertion, was found in heading, and didn't meet any double plus signs but in the next line (which is paragraph for instance), then the second delimiter isn't treated as a closing for that opening.
 
@@ -230,7 +230,7 @@ Feel free to let me know if you find any bugs...
 
 Thanks to:
 - [Pandoc](https://pandoc.org/MANUAL.html) for the idea of superscript and subscript,
-- [CommonMark](https://spec.commonmark.org/) and [Github Flavored Markdown](https://github.github.com/gfm/) for the markdown specification.
+- [CommonMark](https://spec.commonmark.org/) and [Github Flavored Markdown](https://github.github.com/gfm/) for the Markdown specification.
 - [Discord](https://discord.com/) for the spoiler idea.
 - [Superschnizel](https://github.com/Superschnizel/obisdian-fast-text-color) for interactive menu idea,
 - [Mara-Li](https://github.com/Mara-Li/obsidian-regex-mark) for some code snippets,

@@ -1,140 +1,102 @@
-import { Format, TokenRole, TokenStatus } from "src/enums";
+import { Format, TokenLevel, Delimiter, TokenStatus } from "src/enums";
 import { ParserState } from "src/editor-mode/parser";
-import { MainFormat, Token } from "src/types";
-import { retrieveDelimSpec, validateDelim } from "src/editor-mode/parser/utils";
-import { COLOR_TAG_RE } from "src/editor-mode/parser/regexps";
+import { BlockFormat, InlineFormat, Token } from "src/types";
+import { handleClosingDelim, retrieveDelimSpec, validateDelim } from "src/editor-mode/parser/utils";
+import { colorTag, customSpanTag, fencedDivTag } from "src/editor-mode/parser/tokenizer-components";
 
+/**
+ * Tokens will only be created through this. Each method
+ * returns whether `true` or `false`, indicating the success
+ * of the tokenization. Parsed token will be automatically
+ * inserted to the token group.
+ */
 export const Tokenizer = {
-    align(state: ParserState) {
-        let str = state.lineStr, type: Format, length = 0;
-        // If offset isn't zero or the line isn't started with "!!", then it fails
-        if (state.offset || !str.startsWith("!!")) { return false }
-        // Because the line was preceded by "!!", the offset incrased by 2
-        length += 2;
-        switch (true) {
-            case str.startsWith("left", length):
-                type = Format.ALIGN_LEFT;
-                break;
-            case str.startsWith("right", length):
-                type = Format.ALIGN_RIGHT;
-                break;
-            case str.startsWith("center", length):
-                type = Format.ALIGN_CENTER;
-                break;
-            case str.startsWith("justify", length):
-                type = Format.ALIGN_JUSTIFY;
-                break;
-            default:
-                state.advance(length);
-                return false;
-        }
-        length += type + 3;
-        if (!str.startsWith("!!", length)) {
-            state.advance(length);
-            return false;
-        }
-        let lineFrom = state.line.from;
-        length += 2;
-        state.advance(length);
-        state.tokens.push({
-            type,
-            status: TokenStatus.ACTIVE,
-            role: TokenRole.BLOCK_TAG,
-            from: lineFrom,
-            to: lineFrom + length,
-            pointer: state.tokens.length,
-            size: 1
-        });
-        return true;
-    },
-    delim(state: ParserState, type: MainFormat) {
-        if (type == Format.HIGHLIGHT) {
-            throw TypeError("");
-        }
-        let role = state.queue.isQueued(type) ? TokenRole.CLOSE : TokenRole.OPEN,
-            spec = retrieveDelimSpec(type, role),
-            { valid, length } = validateDelim(state.lineStr, state.offset, spec);
-        if (valid) {
-            let token: Token = {
-                type,
-                status: TokenStatus.PENDING,
-                role,
-                from: state.globalOffset,
-                to: state.globalOffset + length,
-                pointer: state.queue.getOpen(type)?.pointer ?? state.tokens.length,
-                size: 2
-            };
-            state.tokens.push(token);
-            state.queue.push(token);
-            state.advance(length);
-            if (role == TokenRole.OPEN) { Tokenizer.content(state, type) }
-            return true;
-        } else {
-            state.advance(length);
-            return false;
-        }
-    },
-    highlightDelim(state: ParserState) {
-        let { from, to } = state.cursor!,
-            length = to - from,
-            type = Format.HIGHLIGHT,
-            role = state.queue.isQueued(type) ? TokenRole.CLOSE : TokenRole.OPEN,
-            token: Token = {
-                type,
-                status: TokenStatus.ACTIVE,
-                role,
-                from,
-                to,
-                pointer: state.queue.getOpen(type)?.pointer ?? state.tokens.length,
-                size: 2
-            };
-        state.tokens.push(token);
-        state.queue.push(token);
-        state.advance(length);
-        if (role == TokenRole.OPEN) { Tokenizer.content(state, type) }
-        return true;
-    },
-    content(state: ParserState, type: MainFormat) {
-        // content should be indexed right after its opening delimiter
-        let from = state.globalOffset;
+    /**
+     * Used for parsing block token. Should only be executed when the
+     * current line was a block start.
+     */
+    block(state: ParserState, type: BlockFormat) {
+        // Block token is only parsed when the current line is a block start.
+        if (!state.blkStart) { return false }
+        // Retrieve DelimSpec based on input type.
+        let spec = retrieveDelimSpec(type, Delimiter.OPEN),
+            // Verifiy that the delimiter was valid and gets its length.
+            { valid, length: openLen } = validateDelim(state.lineStr, state.offset, spec);
+        // Advance along the given delimiter length.
+        state.advance(openLen);
+        // If it isn't valid, then abort it.
+        if (!valid) { return false }
         let token: Token = {
             type,
+            level: TokenLevel.BLOCK,
             status: TokenStatus.PENDING,
-            role: TokenRole.CONTENT,
-            from,
-            to: from,
-            pointer: state.tokens.length - 1,
-            size: 2
+            from: state.globalOffset - openLen,
+            to: state.globalOffset - openLen,
+            openLen,
+            closeLen: 0,
+            tagLen: 0,
+            // Block tag doesn't overlapped over the content.
+            tagAsContent: false,
+            validTag: false,
+            closedByBlankLine: false
         };
-        state.tokens.push(token);
+        // Queue and push the token to the token group.
+        state.blockTokens.push(token);
         state.queue.push(token);
-        if (type == Format.HIGHLIGHT) {
-            token.status = TokenStatus.ACTIVE;
-            Tokenizer.colorTag(state);
-        }
+        // Currently, block token only has fenced div type. Therefore,
+        // the tokenizer parses its tag directly without checking its
+        // type.
+        fencedDivTag(state, token);
+        // Indicate that tokenizing run successfully. 
         return true;
     },
-    colorTag(state: ParserState) {
-        // color tag should be indexed right after highlight content,
-        // therefore its index should be plus two of highlight opening
-        // index
-        COLOR_TAG_RE.lastIndex = state.offset;
-        let match = state.lineStr.match(COLOR_TAG_RE);
-        if (match) {
-            let tagLen = match[0].length,
-                token: Token = {
-                    type: Format.COLOR_TAG,
-                    status: TokenStatus.ACTIVE,
-                    role: TokenRole.INLINE_TAG,
-                    from: state.globalOffset,
-                    to: state.globalOffset + tagLen,
-                    pointer: state.tokens.length,
-                    size: 1
-                };
-            state.tokens.push(token);
-            state.advance(tagLen);
-            return true;
+    /** 
+     * Used for parsing inline token. Should be executed twice only when the
+     * parser state encountered allegedly closing delimiter of the queued token.
+     */
+    inline(state: ParserState, type: InlineFormat) {
+        // Get the token according to the input type, may be null.
+        let token = state.queue.getToken(type),
+            // Which delimiter is encountered by the state.
+            // Determined by the presence of queued token.
+            role = state.queue.isQueued(type) ? Delimiter.CLOSE : Delimiter.OPEN,
+            // Get delimiter specification according to its type.
+            spec = retrieveDelimSpec(type, role),
+            // Check whether it's highlight, custom span, or neither.
+            isHighlight = type == Format.HIGHLIGHT,
+            isCustomSpan = type == Format.CUSTOM_SPAN,
+            // Verifiy that the delimiter was valid and gets its length.
+            { valid, length } = validateDelim(state.lineStr, state.offset, spec);
+        // If it isn't valid, then abort it.
+        if (!valid) {
+            state.advance(length);
+            return false;
         }
-        return false;
+        // If there is a queued token with this type, then finalize it.
+        if (token) {
+            handleClosingDelim(state, token, length);
+        // Else, create new token and push it into the queue.
+        } else {
+            let token: Token = {
+                type,
+                level: TokenLevel.INLINE,
+                status: TokenStatus.PENDING,
+                from: state.globalOffset,
+                to: state.globalOffset,
+                openLen: length,
+                closeLen: 0,
+                tagLen: 0,
+                tagAsContent: isHighlight || isCustomSpan,
+                validTag: false,
+                closedByBlankLine: false
+            };
+            state.inlineTokens.push(token);
+            state.queue.push(token);
+            state.advance(length);
+            // If this token can have a tag, then try to parse it.
+            if (isHighlight) { colorTag(state, token) }
+            else if (isCustomSpan) { customSpanTag(state, token) }
+        }
+        return true;
     }
 }

@@ -74,7 +74,7 @@ Moreover, the tag display behaviour of the highlight, custom span, and fenced di
 
 Along with the latest version, this plugin provides a way for tweaking the custom highlight, without exhaustingly bring the CSS snippet into it. In the "Customize highlight" section, you can adjust:
 - visibilty of the color button,
-- the opaque of the highlight color for each light mode and dark mode, range from 0 to 255, the same as 0.0 to 1.0 (zero means that the highlight will be fully transparent),
+- the opacity of the highlight color for each light mode and dark mode, range from 0 to 1 (zero means that the highlight will be fully transparent),
 - the list of the custom colors, by adding the new one, changing their color and their tag string, or deleting them,  - - also, it is equipped with ability to change the name, arrange, and decide the colors to be displayed in the color menu.
 
 For the last section, the "Others" section, you can choose:

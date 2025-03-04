@@ -1,3 +1,5 @@
 export * from "./DecorationBuilder";
-export * from "./RangeOmitter";
-export * from "./ExtendedSyntax";
+export * from "./DelimOmitter";
+export * from "./TokensCatcher";
+export * from "./LineBreakReplacer";
+export * from "./DecorationHolder";

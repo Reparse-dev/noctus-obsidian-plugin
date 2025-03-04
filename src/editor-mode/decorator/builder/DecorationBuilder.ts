@@ -1,113 +1,225 @@
-import { EditorState, Range } from "@codemirror/state";
-import { Decoration, DecorationSet, ViewUpdate } from "@codemirror/view";
+import { ChangeDesc, ChangeSet, EditorState, Range, RangeSet, Text, Transaction } from "@codemirror/state";
+import { Decoration, EditorView, ViewUpdate } from "@codemirror/view";
 import { Parser } from "src/editor-mode/parser";
-import { Format, TokenRole, TokenStatus } from "src/enums";
-import { createHlDeco } from "src/editor-mode/decorator/utils";
-import { AlignDeco, AlignMarkDeco, ColorTagDeco, ContentDeco, DelimDeco, RevealedSpoiler } from "src/editor-mode/decorator/decorations";
-import { AlignFormat, CharPos, MainFormat } from "src/types";
+import { Format, MarkdownViewMode, TokenStatus } from "src/enums";
+import { REVEALED_SPOILER_DECO } from "src/editor-mode/decorator/decorations";
+import { BlockFormat, PlainRange, InlineFormat, Token, TokenGroup, TokenDecoration, PluginSettings } from "src/types";
 import { ColorButton } from "src/editor-mode/decorator/widgets";
+import { BlockRules, InlineRules } from "src/shared-configs";
+import { DecorationHolder, DelimOmitter, LineBreakReplacer, TokensCatcher } from "src/editor-mode/decorator/builder";
+import { createInlineDecoRange, createLineDecoRange, getLineAt, getTagRange, isEditorModeChanged, iterLine, iterTokenGroup, sliceStrFromLine } from "src/editor-mode/decorator/utils";
+import { trimTag } from "src/utils";
+import { SelectionObserver } from "src/editor-mode/observer";
+import { editorLivePreviewField } from "obsidian";
+import { refresherAnnot } from "src/editor-mode/annotations";
 
-/** Decoration builder (excludes omitted delimiter), should be attached to `ExtendedSyntax` */
 export class DecorationBuilder {
-    /** Attached `Parser` for obtaining tokens quickly */
-    parser: Parser;
-    constructor() {
+    readonly parser: Parser;
+    readonly omitter: DelimOmitter;
+    readonly catcher: TokensCatcher;
+    readonly lineBreakReplacer: LineBreakReplacer;
+    readonly selectionObserver: SelectionObserver;
+    readonly holder: DecorationHolder;
+    readonly settings: PluginSettings;
+    readonly indexCaches = {
+        linePos: { number: 1 }, // 1-based
+        inlineToken: { number: 0 }, // 0-based
+        blockToken: { number: 0 } // 0-based
+    }
+    constructor(parser: Parser, selectionObserver: SelectionObserver) {
+        this.parser = parser;
+        this.selectionObserver = selectionObserver;
+        this.settings = parser.settings;
+        this.omitter = new DelimOmitter(this.settings, selectionObserver);
+        this.catcher = new TokensCatcher();
+        this.lineBreakReplacer = new LineBreakReplacer(parser);
+        this.holder = new DecorationHolder();
     }
     /**
-     * Produces _necessary_ decoration ranges from tokens provided by
-     * `Builder.parser`. Therefore, it doesn't reproduce new ranges
-     * from reused tokens. Doesn't include supplementary and omitted
-     * delimiter.
+     * Main decorations hold basic formatting style of the tokens.
+     * 
+     * Intended to build non-height-altering decorations. So, it doesn't
+     * include line breaks and fenced div opening omitter. (It runs only in
+     * the view update)
      */
-    build(state: EditorState) {
-        let doc = state.doc,
-            tokens = this.parser.tokens,
-            mainDecoRanges: Range<Decoration>[] = [],
-            outerDecoRanges: Range<Decoration>[] = [],
-            delimiterRanges: Range<Decoration>[] = [],
-            { startToken, endToken } = this.parser.lastParsed;
-        for (
-            let i = startToken, token = tokens[i];
-            i < endToken;
-            token = tokens[++i]
-        ) {
-            if (token.status != TokenStatus.ACTIVE) { continue }
-            if (token.role == TokenRole.OPEN) {
-                if (token.type == Format.HIGHLIGHT) {
-                    let color = "",
-                        open = token,
-                        close = tokens[i + token.size - 1],
-                        mayBeColorTag = tokens[i + 2],
-                        hasColorTag = mayBeColorTag?.type == Format.COLOR_TAG;
-                    // gets color tag
-                    if (hasColorTag) {
-                        color = doc.sliceString(mayBeColorTag.from + 1, mayBeColorTag.to - 1);
-                        i++;
-                    }
-                    let hlDeco = createHlDeco(color, {
-                        open: { from: open.from, to: open.to } as CharPos,
-                        close: { from: close.from, to: close.to } as CharPos
-                    });
-                    // highlight should be pushed in outer decorations
-                    outerDecoRanges.push(hlDeco.range(open.from, close.to));
-                    if (hasColorTag) {
-                        delimiterRanges.push(ColorTagDeco.range(mayBeColorTag.from, mayBeColorTag.to));
-                    }
-                } else {
-                    let content = tokens[++i];
-                    delimiterRanges.push(DelimDeco[token.type as MainFormat].range(token.from, token.to));
-                    if (token.type == Format.SPOILER) { // spoiler should be pushed in outer decorations
-                        outerDecoRanges.push(ContentDeco[token.type as MainFormat].range(content.from, content.to));
-                    } else {
-                        mainDecoRanges.push(ContentDeco[token.type as MainFormat].range(content.from, content.to));
-                    }
-                }
-            } else if (token.role == TokenRole.CLOSE && token.type != Format.HIGHLIGHT) {
-                delimiterRanges.push(DelimDeco[token.type as MainFormat].range(token.from, token.to));
-            } else if (token.role == TokenRole.BLOCK_TAG) {
-                delimiterRanges.push(AlignMarkDeco[token.type as AlignFormat].range(token.from, token.to));
-                mainDecoRanges.push(AlignDeco[token.type as AlignFormat].range(token.from, token.from));
+    buildMain(view: EditorView, state: EditorState) {
+        this.buildInline(state, view.visibleRanges);
+        this.buildBlock(state, view.visibleRanges);
+    }
+    /**
+     * Supplementary decorations consist omitted delimiter of inline tokens,
+     * color buttons for the highlight, and revealed spoiler when touched the
+     * cursor or selection.
+     * 
+     * Intended to build non-height-altering decorations. So, it doesn't
+     * include line breaks and fenced div opening omitter. (It runs only in
+     * the view update)
+     */
+    buildSupplementary(isLivePreview: boolean) {
+        if (isLivePreview) {
+            this.omitInlineDelim(this.catcher.activeTokens);
+            this.createColorBtnWidgets(this.catcher.hlTokens);
+            this.revealSpoiler(this.catcher.spoilerTokens);
+        } else {
+            this.holder.colorBtnSet = this.holder.revealedSpoilerSet = RangeSet.empty;
+        }
+    }
+    /**
+     * Runs once on editor intialization, should be inside the view update
+     * (i.e. the ViewPlugin update).
+     */
+    onViewInit(view: EditorView) {
+        let state = view.state,
+            isLivePreview = state.field(editorLivePreviewField);
+        this.buildMain(view, state);
+        this.buildSupplementary(isLivePreview);
+    }
+    onViewUpdate(update: ViewUpdate) {
+        let state = update.state,
+            view = update.view,
+            isLivePreview = state.field(editorLivePreviewField);
+        if (this.parser.isReparsing || this.parser.isInitializing || update.viewportMoved) {
+            this.buildMain(view, state);
+        }
+        if (this.selectionObserver.isObserving || update.viewportMoved) {
+            this.buildSupplementary(isLivePreview);
+        }
+    }
+    /**
+     * Runs once on editor intialization, should be inside the state update
+     * (i.e. the StateField update).
+     */
+    onStateInit(state: EditorState) {
+        let isLivePreview = state.field(editorLivePreviewField);
+        if (isLivePreview) {
+            this.omitFencedDivOpening();
+        }
+        this.replaceLineBreaks(state.doc);
+    }
+    onStateUpdate(transaction: Transaction) {
+        let state = transaction.state,
+            isLivePreview = state.field(editorLivePreviewField),
+            isRefreshed = transaction.annotation(refresherAnnot),
+            isModeChanged = isEditorModeChanged(state, transaction.startState);
+        if (this.parser.isReparsing || this.parser.isInitializing) {
+            this.replaceLineBreaks(transaction.newDoc, transaction.changes);
+        }
+        if (isModeChanged || isRefreshed) {
+            this.selectionObserver.restartObserver(transaction.newSelection, transaction.docChanged);
+            this.holder.blockOmittedSet = RangeSet.empty;
+        }
+        if (!isLivePreview) {
+            this.removeOmitter();
+        } else if (this.selectionObserver.isObserving || isModeChanged) {
+            this.omitFencedDivOpening(transaction.changes);
+        }
+    }
+    buildInline(state: EditorState, visibleRanges: readonly PlainRange[]) {
+        let inlineDecoRanges: Range<TokenDecoration>[] = [],
+            activeTokens: TokenGroup = [],
+            hlTokens: TokenGroup = [],
+            spoilerTokens: TokenGroup = [];
+        iterTokenGroup({
+            tokens: this.parser.inlineTokens,
+            ranges: visibleRanges,
+            indexCache: this.indexCaches.inlineToken,
+            callback: (token) => {
+                if (token.status != TokenStatus.ACTIVE) { return }
+                if (token.type == Format.HIGHLIGHT) { hlTokens.push(token) }
+                if (token.type == Format.SPOILER) { spoilerTokens.push(token) }
+                inlineDecoRanges.push(this.transformInlineToken(token, state.doc));
+                activeTokens.push(token);
+            },
+        });
+        this.catcher.catch(activeTokens, hlTokens, spoilerTokens);
+        return this.holder.inlineSet = Decoration.set(inlineDecoRanges);
+    }
+    buildBlock(state: EditorState, visibleRanges: readonly PlainRange[]) {
+        let lineDecoRanges: Range<TokenDecoration>[] = [];
+        iterTokenGroup({
+            tokens: this.parser.blockTokens,
+            ranges: visibleRanges,
+            indexCache: this.indexCaches.blockToken,
+            callback: (token) => {
+                if (token.status != TokenStatus.ACTIVE) { return }
+                lineDecoRanges.push(...this.transformBlockToken(token, state.doc));
+            },
+        });
+        return this.holder.blockSet = Decoration.set(lineDecoRanges);
+    }
+    transformInlineToken(token: Token, doc: Text) {
+        let cls = "cm-" + InlineRules[token.type as InlineFormat].class;
+        if (token.tagLen) {
+            let line = getLineAt(doc, token.from, this.indexCaches.linePos),
+                tagRange = getTagRange(token),
+                tagStr = sliceStrFromLine(line, tagRange.from + 1, tagRange.to - 1);
+            if (token.type == Format.CUSTOM_SPAN) {
+                tagStr = trimTag(tagStr);
+                cls += " " + tagStr;
+            } else {
+                cls += " " + cls + "-" + tagStr;
             }
         }
-        return { mainDecoRanges, outerDecoRanges, delimiterRanges };
+        return createInlineDecoRange(token, cls);
     }
-    /**
-     * Filters out some ranges from old set that needs to be replaced by the new one,
-     * resulting new `DecorationSet`. Doesn't intended to filtering supplementary
-     * and omitted delimiter set.
-     */
-    updateSet(update: ViewUpdate, decoSet: DecorationSet, ranges: Range<Decoration>[]) {
-        let { startToken: start, endToken: end } = this.parser.lastParsed,
-            docLen = update.state.doc.length,
-            filterFrom = (this.parser.tokens[start - 1]?.to ?? 0),
-            filterTo = (this.parser.tokens[end]?.from ?? docLen);
-        return decoSet.map(update.changes).update({
-            add: ranges, filterFrom, filterTo,
-            filter(from, to, val) {
-                return (to == filterFrom || from == filterTo) && ((val.spec.type as Format) <= Format.ALIGN_JUSTIFY && from != 0 || to != from);
-            }
+    transformBlockToken(token: Token, doc: Text) {
+        let baseCls = "cm-" + BlockRules[token.type as BlockFormat].class,
+            openLine = getLineAt(doc, token.from, this.indexCaches.linePos),
+            tagRange = getTagRange(token),
+            tagStr = trimTag(sliceStrFromLine(openLine, tagRange.from, tagRange.to)),
+            openDelimCls = baseCls + " cm-fenced-div-start",
+            contentCls = baseCls + " " + tagStr,
+            ranges: Range<TokenDecoration>[] = [createLineDecoRange(token, openDelimCls, openLine)];
+        iterLine({
+            doc, fromLn: openLine.number + 1,
+            callback(line) {
+                if (line.to > token.to) { return false }
+                if (line.to == token.to && !line.text.trimEnd()) { return false }
+                let decoRange = createLineDecoRange(token, contentCls, line);
+                ranges.push(decoRange);
+            },
         });
+        return ranges;
     }
-    /** Produces supplementary decorations (color button and reveled text for spoiler). */
-    // TODO: Make it incrementally
-    getSupplemental(state: EditorState, outerDecoSet: DecorationSet) {
-        let decoRanges: Range<Decoration>[] = [],
-            selectRanges = state.selection.ranges,
-            i = 0;
-        outerDecoSet.between(0, state.doc.length, (from, to, val) => {
-            while (selectRanges[i] && selectRanges[i].to < from) { i++ }
-            if (!selectRanges[i]) { return false }
-            if (selectRanges[i].from > to) { return }
-            let type = val.spec.type as Format.HIGHLIGHT | Format.SPOILER;
-            if (type == Format.HIGHLIGHT && this.parser.settings.colorButton) {
-                let color = val.spec.color as string,
-                    open = (val.spec.open as CharPos),
-                    close = (val.spec.close as CharPos);
-                decoRanges.push(ColorButton.of(color, open, close));
-            } else if (type == Format.SPOILER) {
-                decoRanges.push(RevealedSpoiler.range(from, to));
+    createColorBtnWidgets(hlTokens: TokenGroup) {
+        if (!this.settings.colorButton) {
+            return this.holder.colorBtnSet = RangeSet.empty;
+        }
+        let btnWidgets: Range<Decoration>[] = [];
+        for (let i = 0; i < hlTokens.length; i++) {
+            let token = hlTokens[i];
+            if (this.selectionObserver.touchSelection(token.from, token.to)) {
+                btnWidgets.push(ColorButton.of(token));
             }
-        });
-        return Decoration.set(decoRanges);
+        }
+        return this.holder.colorBtnSet = Decoration.set(btnWidgets);
+    }
+    revealSpoiler(spoilerTokens: TokenGroup) {
+        let revealedRanges: Range<Decoration>[] = [];
+        for (let i = 0; i < spoilerTokens.length; i++) {
+            let token = spoilerTokens[i];
+            if (this.selectionObserver.touchSelection(token.from, token.to)) {
+                revealedRanges.push(REVEALED_SPOILER_DECO.range(token.from, token.to));
+            }
+        }
+        return this.holder.revealedSpoilerSet = Decoration.set(revealedRanges);
+    }
+    omitInlineDelim(activeTokens: TokenGroup) {
+        return this.holder.inlineOmittedSet = this.omitter.omitInline(activeTokens);
+    }
+    /** Executed only in the state update. */
+    replaceLineBreaks(doc: Text, changes?: ChangeSet) {
+        return this.holder.lineBreaksSet = this.lineBreakReplacer.replace(doc, changes);
+    }
+    /** Executed only in the state update. */
+    omitFencedDivOpening(changes?: ChangeDesc) {
+        let isOmitted = !(this.settings.alwaysShowFencedDivTag & MarkdownViewMode.EDITOR_MODE);
+        if (!isOmitted) {
+            return this.holder.blockOmittedSet = RangeSet.empty;
+        }
+        return this.holder.blockOmittedSet = this.omitter.omitBlock(this.holder.blockOmittedSet, changes);
+    }
+    removeOmitter() {
+        this.holder.inlineOmittedSet = this.holder.blockOmittedSet = RangeSet.empty;
     }
 }

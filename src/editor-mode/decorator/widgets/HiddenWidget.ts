@@ -1,20 +1,23 @@
 import { Decoration, WidgetType } from "@codemirror/view";
+import { Token } from "src/types";
 
 export class HiddenWidget extends WidgetType {
-    replaced: Decoration;
-    constructor(replaced: Decoration) {
+    token: Token;
+    constructor(replaced: Token) {
         super();
-        this.replaced = replaced;
+        this.token = replaced;
     }
     eq(other: HiddenWidget) {
-        return other.replaced == this.replaced;
+        return other.token == this.token;
     }
     toDOM(): HTMLElement {
         return document.createElement("span");
     }
-    static of(from: number, to: number, replaced: Decoration) {
+    static of(from: number, to: number, token: Token, isBlock = false) {
         return Decoration.replace({
-            widget: new HiddenWidget(replaced)
+            widget: new HiddenWidget(token),
+            block: isBlock,
+            inclusiveEnd: false
         }).range(from, to);
     }
 }

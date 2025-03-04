@@ -8,39 +8,99 @@ You can easily create text that is <ins>underlined</ins>, <sup>superscripted</su
 
 ## Features
 
-This plugin has four main features:
+- Extends your Markdown with some inline syntax which aren't available in the native Obsidian syntax, including:
+    - insertion (underline),
+    - Discord-flavored spoiler,
+    - Pandoc-style superscript and subscript,
+    - custom color tag for highlight, and
+    - custom span with ability to insert your own class(es).
+- Pandoc-style fenced div syntax for customizing block-level format.
+- Uses non-prerendered Markdown preview when formatting such syntax in live-preview mode, gives a more intuitive impression in such a way.
+- Be aware of inline and block context, so syntax won't be parsed while it encounters such a codeblock, codespan, or context boundary.
+- Has an ability to customize the color of the highlight with your own desire through settings.
+- Provides color menu for highlight, improves more efficient way to change the color.
+- Set your own custom class(es) for custom span and fenced div syntax.
+- Toggling specific syntax on and off through the settings.
+- Configurable tag display behaviour for the tag of the highlight, custom span, and fenced div.
+- Supports parsing exported PDF (can be switched off in the settings).
 
-1. Inline formatting (insertion, spoiler, superscript, subscript).
-2. Paragraph aligning.
-3. Custom highlight color.
-4. Context-aware formatting.
+## Usage
 
-### A. Inline Formatting
+### 1. Inline Formatting
 
-There is four formatting types that currently developed in this plugin: **insertion** (underline), **Discord-flavoured spoiler**, and **Pandoc-flavoured superscript and subscript**.
+There is four formatting types that currently developed in this plugin: **insertion** (underline), **Discord-flavoured spoiler**, **Pandoc-flavoured superscript and subscript**, custom tag for ==highlight==, and custom span that can be inserted with your own class(es).
 
-| Type        | Syntax              | Result                                             |
-| ----------- | ------------------- | -------------------------------------------------- |
-| insertion   | `++your text++`     | <ins>your text</ins>                                   |
-| spoiler     | `\|\|your text\|\|` | <span style="background: #2e2e2e">your text</span> |
-| superscript | `^your-text^`       | <sup>your-text</sup>                               |
-| subscript   | `~your-text~`       | <sub>your-text</sub>                               |
+| Type        | Syntax                 | Result                                                        |
+| ----------- | ---------------------- | ------------------------------------------------------------- |
+| insertion   | `++your text++`        | <ins>your text</ins>                                          |
+| spoiler     | `\|\|your text\|\|`    | <span style="background: #2e2e2e">your text</span>            |
+| superscript | `^your-text^`          | <sup>your-text</sup>                                          |
+| subscript   | `~your-text~`          | <sub>your-text</sub>                                          |
+| highlight   | `=={color}your text==` | <mark>your text</mark>                                        |
+| custom span | `!!{myCls}your text!!` | your text (should be rendered with the `myCls` class defined) |
 
 By default, **insertion** give the text underline style, **spoiler** hide the text and can be revealed by clicking it (or hovering over it in editor mode), while **superscript** and **subscript** make the text being raised or lowered as `<sup>` and `<sub>` do.
 
-The main advantage of using those syntaxes over html tags is that those syntaxes are rendered properly in the editor alongside other built-in syntaxes. So you can combine them without blocking other style being rendered in editor, in stark contrast to the html tags, for instance `this *is ++italic-underlined++*`.
+The main advantage of using those syntaxes over html tags is that those syntaxes are rendered properly in the editor alongside other built-in syntaxes. So you can combine them without blocking other style being rendered in editor, in stark contrast to the html tags, for instance `this *is ++italic-underlined text++*`.
 
-To make clear and avoid ambiguity, some rules are applied to the syntaxes:
+To give those formats, you can wrap the text with specific delimiters, covering it on both sides (see the table above). Additionally, for the highlight and custom span, you may insert a tag right after the opening delimiter, specifying the color for the highlight, and the classes for the custom span.
 
-#### 1. General Rules for Inline Syntaxes (Insertion, Spoiler, Superscript, Subscript)
+For ease access, in the editor, the color button will appear after the opening delimiter when the cursor or selection touches the highlight. Clicking on it shows colors menu and let us choose the desired color (you can disable the color botton in settings, and thus will be hidden in the editor).
+
+> [!Note]
+>
+> You can use typing-helper plugins such as [Easy Typing](https://github.com/Yaozhuwa/easy-typing-obsidian) to make formatting faster and efficient.
+
+### 2. Block Formatting
+
+Currenty, this plugin only support one type of block syntax, that's Pandoc-style fenced div.
+
+```markdown
+::: my-class-1 my-class-2
+This is fenced div content.
+```
+
+But it has been modified in this plugin to become a way more restricted, avoiding conflict with the built-in syntax. So, you will only need an opening delimiter to start this format in the concerned text. Optionally, you can insert a tag containing your own classes, which then can be styled through the CSS snippet.
+
+> [!Note]
+>
+> Custom align no longer available in this plugin, because it is already covered by the fenced div.
+
+### 3. Altering the Settings
+
+Because some syntax may not be required, or just simply you don't want to use it, this plugin provides ability to turn specific syntax off. Also, this plugin give some option to turn those off only in one mode (either editor or preview mode), gives you more freely and flexible choice depend on your needs.
+
+Moreover, the tag display behaviour of the highlight, custom span, and fenced div can be configured through the "Tag display behaviour" section. If you don't want the tag to be hidden, you can set it to "Always visible" in the live-preview mode, or toggle it on in the preview mode.
+
+Along with the latest version, this plugin provides a way for tweaking the custom highlight, without exhaustingly bring the CSS snippet into it. In the "Customize highlight" section, you can adjust:
+- visibilty of the color button,
+- the opaque of the highlight color for each light mode and dark mode, range from 0 to 255, the same as 0.0 to 1.0 (zero means that the highlight will be fully transparent),
+- the list of the custom colors, by adding the new one, changing their color and their tag string, or deleting them,  - - also, it is equipped with ability to change the name, arrange, and decide the colors to be displayed in the color menu.
+
+For the last section, the "Others" section, you can choose:
+- whether the delimiter can be escaped by backslash or not (editor only), and
+- whether the syntax will be parsed in the exported PDF or not.
+
+> [!Note]
+> 
+> You don't need to reload the app after changing the settings.
+
+## Syntax Rules
+
+To make clear and avoid ambiguity, some rules are applied to the syntax.
+
+#### 1. General Rules for All Syntax
+
+- Any built-in syntax from Obsidian has a higher precedence than that in this plugin.
+
+#### 2. General Rules for Inline Syntax (Insertion, Spoiler, Superscript, Subscript, Highlight Color Tag, Custom Span)
 
 - Opening delimiter must not be followed by any whitespace character (regular space, tab, and new line), and the closing one must not be preceded by any whitespace character.
 - Delimiter must satisfy its requiered length as will be explained later, and must not be preceded or followed by the same character as the delimiter, or the same non-escaped if configured for that.
-- Delimiter must not be escaped, if it was configured to not be escaped, by a backslash. Otherwise, it will act as literal character.
-- Formatting only occurs when opening delimiter met its closing.
+- (Editor only, can be altered through the settings) Delimiter must not be escaped, if it was configured to not be escaped, by a backslash. Otherwise, it will act as literal character.
+- Formatting only occurs when opening delimiter met its closing (doesn't include highlight).
 - Content text, that is surrounded by delimiters, must at least one character.
 - Content text must not have two or more new line character.
-- Any built-in syntaxes from Obsidian has a higher precedence than that in this plugin.
 
 For better understanding, the table below can give some example applying those rules:
 
@@ -55,36 +115,51 @@ For better understanding, the table below can give some example applying those r
 | `++ lor++em++` (first one doesn't include)         | `++ ++`                                    |
 | `\+++lorem++ ++ipsum\+++` (if escaping is enabled) | `\++lorem++ +\++ipsum\++++`                |
 
-#### 2. Rules for Insertion and Spoiler
+#### 3. Rules for Insertion and Spoiler
 
 - Insertion is defined as text consist at least one character surrounded by exactly double plus signs (`++`) on each side.
 - Spoiler is the same as the insertion, it's just surrounded by exactly double bars (`||`) on each side.
 
-```
-++insertion++ +not insertion+ ||spoiler|| |||not spoiler||||
-```
+| Valid format                             | Invalid format                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------ |
+| `++ins++` `++ins also++`                 | `++ not ins++`, `++not ins` `++not ins ++` `+++not ins++`          |
+| `\|\|spoiler\|\|` `\|\|spoiler also\|\|` | `\|\| not spoiler\|\|`, `\|\|not spoiler \|\|` `\|\|not spoiler\|` |
 
-the expected result is:
-
->  <ins>insertion</ins> +not insertion+ <span style="background: #2e2e2e">spoiler</span> |||not spoiler||||
-
-#### 3. Rules for Superscript and Subscript
+#### 4. Rules for Superscript and Subscript
 
 - Superscript is defined as text consist at least one character surrounded by only single caret (`^`) on each side, and must not contain any of whitespace character.
 - Subscript act like superscript, it's just use single tilde as delimiter.
 - Thus, insertion and spoiler allow its content to have any whitespace character. It's contasts with the case of superscript and subscript.
 
-```
-^sup^ ^^not-sup^ ^not sup^, ~sub~ ~~not-sub~~~ ~not
-sub~
-```
+| Valid format         | Invalid format                                                  |
+| -------------------- | --------------------------------------------------------------- |
+| `^sup^` `^sup-also^` | `^ not-sup^`, `^not sup^`, `^not-sup` `^not-sup ^` `^^not-sup^` |
+| `~sub~` `~sub-also~` | `~ not-sub~`, `~not sub~`, `~not-sub` `~not-sub ~` `~not-sub~~` |
 
-will be rendered as:
+#### 5. Rules for Custom Span
 
-> <sup>sup</sup> ^^not-sup^ ^not sup^, <sub>sub</sub> ~~not-sub~~~ ~not
-> sub~
+- Custom span use the same rules as insertion and spoiler, except it uses double exclamation marks on each side to wrap its content.
+- It also comes with a tag you can insert a class or classes into. The tag consists alphanumeric character(s), hyphen(s), and space(s) (at least one character), wrapped by curly brackets on each side. A space is treated as a devider between classes. Other character inserted before or within the tag will disable it, so it will be stated as invalid tag.
 
-#### 4. Delimiter escaping
+| Valid tag                 | Invalid tag                                                 |
+| ------------------------- | ----------------------------------------------------------- |
+| `!!{my-class}span!!`      | `!! {class}not span!!`, `!!a{class}span!!`                  |
+| `!!{class-1 cls-2}span!!` | `!!{}span!!,`  `!!{*_}not span !!`, `!!{green_color}span!!` |
+
+Later on, you can add corresponding class in your CSS snippet. For instance, if you type `!!{my-class strong-text}My text!!`, it will be rendered in HTML as `<span class="my-class strong-text">My text</span>` (with additional `cm-custom-span` class in the editor, and `custom-span` in the preview).
+
+#### 6. Rules for Highlight Color Tag
+
+The color of each highlight can be customized by adding color tag exactly after its opening delimiter. The tag behaves like the custom span tag, except it doesn't allow any space within it.
+
+| Valid color tag            | Invalid color tag                                                     |
+| -------------------------- | --------------------------------------------------------------------- |
+| `=={color}highlight==`     | `== {color}highlight==`, `==a{color}highlight==`                      |
+| `=={abcAb--10}highlight==` | `=={ }highlight==,` `=={*_}highlight==`, `=={green_color}highlight==` |
+
+Valid color tag will be added in the highlight classes, so `=={red}Red==` will be parsed in html tag as **`<span class="cm-custom-highlight cm-custom-highlight-red">`** in editor and **`<mark class="custom-highlight custom-highlight-red">`** in preview mode.
+
+#### 7. NOTE: Delimiter Escaping
 
 As already explained, using escaper backslash can change the semantic meaning to that being escaped. Escaped punctuation is treated as regular character that doesn't have functional use. This applies to those delimiters when "Delimiter escaping" option is switched on.
 
@@ -100,73 +175,33 @@ However, we can only apply this feature in editor mode, since escaped character 
 
 Due to this condition, "Delimiter escaping" was turned of by default to maintain consistency between editor and preview mode.
 
-### B. Paragraph Aligning
+#### 8. Pandoc-style Fenced Div
 
-Paragraph can be aligned by inserting one of specific tags exactly at the beginning of the line. Those tags are `!!left!!`, `!!right!!`, `!!center!!`, and `!!justify!!`, where each tag representing a type of alignment that should be used.
+Since the align tag has been removed, as it is not as flexible as though, I decided to bring the plugin with Pandoc-style fenced div, which more flexible and intuitive for block customizing. Even though it is Pandoc-style, the implemented rule in this plugin is more restricted to avoid unnecessary broken layout and conflicts (or even worse).
 
-Note that any character that was prepended before the tag, even if it's just one space, will terminate the tag, so it's treated as regular characters.
-
-```
-!!center!!will be centered
-
- !!center!!will not be centered
-```
-
-It's will be rendered like this:
-
-> <div>
-> <p style="text-align: center">will be centered</p>
-> <p> !!center!!will not be centered</p>
-> </div>
-
-#### Caution
-
-In editor mode, each line depends on itself, so you must type alignment tag to get it be aligned. However, in preview mode, paragraph can consist more than one line. Accordingly, only tag that located at the first line of the paragraph (if it consists more than a line) will be treated as it is, and the others will act as a regular text.
-
-So, this Markdown
+- Fenced div must be opened by a line consists of three or more colons (`:::`), at must be located exactly in the line start.
+- The colons may, and only, be followed by tag that consists of alphanumeric, hyphen, and space (can be empty).
+- Other characters aren't allowed in the opening line. Even a colon that was inserted in the tag range will make the format invalid.
+- It is only be closed by different context (e.g. list, blockquote), blank line, or the end of the document.
+- You don't need to close the format with any delimiter.
 
 ```
-!!center!!aligned to the center in both modes
-!!right!!aligned to the right in editor, to the center in preview
-not being aligned in editor (or aligned to its initial), aligned to center in preview
+:::
+valid fenced div
+
+::: my-class
+also valid
+
+:::my-class other-class
+also
+valid
 ```
 
-will be rendered in editor like this:
-> <p style="text-align: center">aligned to the center in both modes</p>
-> <p style="text-align: right">aligned to the right in editor, to the center in preview</p>
-> not being aligned in editor (or aligned to its initial), aligned to center in preview
+#### 9. Context-aware Formatting
 
-and in preview like this:
-> <p style="text-align: center">
-> aligned to the center in both modes<br>
-> !!right!!aligned to the right in editor, to the center in preview<br>
-> not being aligned in editor (or aligned to its initial), aligned to center in preview<br>
-> </p>
+Any syntax that are written in the codespan, codeblock, math, comment, and wikilink don't apply the rules, so they are treated according to their context. Or, in the nutshell, they aren't formatted. This corresponds to the many of markdown implementation, as well as that implemented in Obsidian.
 
-### C. Custom Highlight Color
-
-Color of each highlight can be customized by adding color tag exactly after its opening delimiter. The tag consists of opening curly bracket `{`, alphanumeric character(s) `a-zA-Z0-9` (at least one, can be added with minus sign `-`), and closing curly bracket, for example: `=={red}Red==, =={Green2}Green==, =={ocean-blue}Blue==`.
-
-| Valid color tag        | Invalid color tag                                         |
-| ---------------------- | --------------------------------------------------------- |
-| `=={color}lorem==`     | `== {color}lorem==`, `==a{color}lorem==`                  |
-| `=={abcAb--10}lorem==` | `=={ }lorem==,` `=={*_}lorem==`, `=={green_color}lorem==` |
-
-Valid color tag will be added in the highlight classes, so `=={red}Red==` will be parsed in html tag as **`<span class="cm-custom-highlight cm-custom-highlight-red">`** in editor and **`<mark class="custom-highlight custom-highlight-red">`** in preview mode. This plugin bring some predefined CSS rules that automatically give customized color to the highlight. Those predifined colors are red, orange, yellow, green, cyan, blue, purple, pink, and accent (accent color of your app).
-
-For ease access, in the editor, the color button will appear after opening delimiter when the cursor or selection touches the highlight. Clicking on it shows colors menu and let the user choose the desired color (you can disable the color botton in settings, and thus will be hidden in the editor).
-
-![custom-highlight.gif](docs/media/custom-highlight.gif)
-
-> [!note]
->
-> Currently, other colors can only be customized through CSS. In the future, I would like to add a feature that can customize and add other colors through the settings.
-
-### D. Context-aware Formatting
-
-Any syntaxes that are written in the codespan, codeblock, math, comment, and wikilink don't apply the rules, so they  are treated according to their context. Or, in the nutshell, they aren't formatted. This corresponds to the many of Markdown implementation, as well as that implemented in Obsidian.
-
-In addition in the editor, any formatting above doesn't overlapping its block context. So if opening delimiter, i.e. double plus signs for insertion, was found in heading, and didn't meet any double plus signs but in the next line (which is paragraph for instance), then the second delimiter isn't treated as a closing for that opening.
+In addition in the editor, any formatting above doesn't overlapping its block context. So if a opening delimiter, i.e. double plus signs for insertion, was found in heading, and didn't meet any double plus signs but in the next line (which is paragraph for instance), then the second delimiter isn't treated as a closing for that opening.
 
 Example below can give some better understanding:
 
@@ -196,43 +231,65 @@ Expected result:
 > <li>another <ins>list
 > <br>lazy continuation</ins></li></ol>
 
+## Installation
+
+- In-app
+    - Open settings.
+    - Choose "Community plugins" setting tab.
+    - Turn off "Restricted mode" if it was enabled before.
+    - Click "Browse" at "Community plugins" item.
+    - Type "Extended Markdown Syntax" in the search box.
+    - Install and enable it.
+- Manual
+    - Create a folder named `extended-markdown-parser` under `.obsidian/plugins`.
+    - Place `manifest.json`, `main.js`, and `style.css` from the latest release into the folder.
+    - Enable it through the "Community plugin" setting tab.
+- Using [BRAT](https://github.com/TfTHacker/obsidian42-brat).
+
 ---
 
 ## FAQ's
 
 ### Is it working on the table and callout?
-Of course it's working on both.
+Of course it's working on both, except for the fenced div.
 
 ### Does the plugin work on large files?
-I tested it on a 250kB file and it's still working. This plugin also uses parser that implemented simple incremental and partial parsing, so you don't need to worry about facing with big files. But if you still have some issues with it, feel free to inform me what the issues you are struggling with.
+I tested it on a 250kB file and it's still working fine. This plugin also uses parser that implemented simple incremental and partial parsing, so you don't need to worry about facing with large files. But if you still have some issues with it, feel free to inform me what the issues you are struggling with.
 
-### Can I use another color for highlights, other than those specified?
-For sure. But, for the moment, you can only do color customizing through the CSS. Use selector `.cm-custom-highlight.cm-custom-highlight-YOURCOLOR, .custom-highlight custom-highlight-YOURCOLOR` in the CSS rule (change "YOURCOLOR" with the text you will use in the color tag) and set the `background-color` as you desire.
-
-I have plan in the future to implement it in the settings.
+### Will it cause conflict with other plugins that concerns extending syntax?
+It depends on what character the others use in their syntax.
 
 ## Features to be Implemented in The Future
 
 - [x] Enable/disable formatting in settings
 - [x] Applicable on mobile
-- [ ] Fixing paragraph alignment bug
-- [ ] Customize formatting styles and highlighting colors
+- [x] ~~Fixing paragraph alignment bug~~ For now, use fenced div to customize block level format
+- [x] Customize highlighting colors
+- [ ] Customize formatting styles
 - [ ] Applying syntax quickly using shortcuts and context menu
-- [ ] More syntaxes, if necessary
+- [ ] Class suggester for custom span and fenced div
+- [ ] ~~More syntax, if necessary~~ *I'll be over here for a while*
 
-## Other Known Issues
+## Compatibility Note
 
-- Cannot escape spoilers that are inside table cells (in source mode)
+This plugin have been tested in the latest version of Obsidian (about 1.7.x - 1.8.x), and haven't been tested yet in the version 1.6.x and below.
+
+## Known Issues
+
+- Delimiter escaping doesn't work in the preview mode.
+- Cannot escape spoilers that are inside table cells (in source mode). (**cannot be fixed**)
+- ~~Sometimes, faster scrolling on a big file (by using scroll bar thumbs and moving it suddenly to the bottom) breaks the customized highlight color. (*can be fixed temporarily by scrolling with fair speed through the highlight*)~~ _Already fixed_
 
 Feel free to let me know if you find any bugs...
 
 ## Credit
 
 Thanks to:
-- [Pandoc](https://pandoc.org/MANUAL.html) for the idea of superscript and subscript,
-- [CommonMark](https://spec.commonmark.org/) and [Github Flavored Markdown](https://github.github.com/gfm/) for the Markdown specification.
+- [Pandoc](https://pandoc.org/MANUAL.html) for the idea of some syntax,
+- [CommonMark](https://spec.commonmark.org/) and [Github Flavored Markdown](https://github.github.com/gfm/) for the markdown specification.
 - [Discord](https://discord.com/) for the spoiler idea.
 - [Superschnizel](https://github.com/Superschnizel/obisdian-fast-text-color) for interactive menu idea,
+- [Exaroth](https://github.com/exaroth/mdx_custom_span_class) for custom span idea.
 - [Mara-Li](https://github.com/Mara-Li/obsidian-regex-mark) for some code snippets,
 - [marcel-goldammer](https://github.com/marcel-goldammer/obsidian-keyword-highlighter),
 - [attcoleanderson](https://github.com/mattcoleanderson/obsidian-dynamic-text-concealer)

@@ -1,6 +1,6 @@
 import { SyntaxNode } from "@lezer/common";
 
-export const ShifterNodeConfigs: { [P in string]: {query: string, getOpen: (node: SyntaxNode) => SyntaxNode | null} } = {
+export const ShifterNodeConfigs: Record<string, { query: string, getOpen: (node: SyntaxNode) => SyntaxNode | null }> = {
     ["table-row"]: {
         query: "table-row",
         getOpen(node) {

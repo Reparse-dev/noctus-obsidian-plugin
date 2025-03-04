@@ -1,4 +1,4 @@
-import { TokenRole } from "src/enums";
+import { Delimiter } from "src/enums";
 import { DelimSpec } from "src/types";
 
 export function validateDelim(str: string, offset: number, spec: DelimSpec) {
@@ -6,14 +6,14 @@ export function validateDelim(str: string, offset: number, spec: DelimSpec) {
     while (str[offset + length] == spec.char) { length++ }
     if (spec.exactLen && length == spec.length || !spec.exactLen && length >= spec.length) {
         let char: string;
-        if (spec.role == TokenRole.OPEN) {
+        if (spec.role == Delimiter.OPEN) {
             char = str[offset + length];
-        } else if (spec.role == TokenRole.CLOSE) {
+        } else if (spec.role == Delimiter.CLOSE) {
             char = str[offset - 1];
         } else {
             throw TypeError("");
         }
-        if (char && char != " " && char != "\t") { valid = true }
+        if (spec.allowSpaceOnDelim || char && char != " " && char != "\t") { valid = true }
     }
     return { valid, length };
 }

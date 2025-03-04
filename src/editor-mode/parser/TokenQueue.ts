@@ -1,106 +1,113 @@
-import { Format, TokenRole, TokenStatus } from "src/enums";
-import { MainFormat, Token } from "src/types";
+import { Format, TokenLevel, TokenStatus } from "src/enums";
+import { InlineFormat, Token } from "src/types";
 import { ParserState } from "src/editor-mode/parser";
+import { Formats, InlineRules } from "src/shared-configs";
 
+/**
+ * A place storing token based on its type, to be resolved through
+ * the `Parser` and `ParserState` when satisfies certain conditions,
+ * such as the token finally reaches its closing delimiter or faces
+ * a context boundary.
+ */
 export class TokenQueue {
-    open: Record<MainFormat, Token | null> = {
-        [Format.INSERTION]: null,
-        [Format.SPOILER]: null,
-        [Format.SUPERSCRIPT]: null,
-        [Format.SUBSCRIPT]: null,
-        [Format.HIGHLIGHT]: null,
-    };
-    /**
-     * Content token is generated and pushed automatically
-     * as its opening delimiter enter the queue.
-     */
-    content: Record<MainFormat, Token | null> = {
-        [Format.INSERTION]: null,
-        [Format.SPOILER]: null,
-        [Format.SUPERSCRIPT]: null,
-        [Format.SUBSCRIPT]: null,
-        [Format.HIGHLIGHT]: null,
-    };
-    close: Record<MainFormat, Token | null> = {
-        [Format.INSERTION]: null,
-        [Format.SPOILER]: null,
-        [Format.SUPERSCRIPT]: null,
-        [Format.SUBSCRIPT]: null,
-        [Format.HIGHLIGHT]: null,
-    };
-    state: ParserState;
+    /** Contains all queued tokens (if any), each is paired by its format type. */
+    private tokenMap: Partial<Record<Format, Token>> = {};
+    private state: ParserState;
     constructor() {
     }
-    get tokens() {
-        return this.state.tokens;
-    }
+    /**
+     * Attach a state to the queue. Often used when
+     * initializing the parsing.
+     */
     attachState(state: ParserState) {
         this.state = state;
-        state.queue = this;
+        this.state.queue = this;
     }
-    deattachState() {
-        (this.state as ParserState | undefined) = undefined;
+    /** 
+     * Detach currently attached state from the queue. Often used
+     * when the parsing was done.
+     */
+    detachState() {
+        (this.state.queue as unknown) = undefined;
+        (this.state as unknown) = undefined;
     }
-    isQueued(type: MainFormat) {
-        return !!this.open[type];
+    /** Checking whether the token with `type` format is queued or not. */
+    isQueued(type: Format) {
+        return !!this.tokenMap[type];
     }
+    /** Push a token into the queue, exactly into the token map. */
     push(token: Token) {
-        if (token.type < Format.INSERTION || token.type == Format.COLOR_TAG) {
-            throw TypeError("Type of token must be one of MainFormat");
-        }
-        // Used as key to access certain queued token
-        let type = token.type as MainFormat,
-            role = token.role;
-        if (role == TokenRole.OPEN) {
-            this.open[type] = token;
-        } else if (role == TokenRole.CONTENT) {
-            this.content[type] = token;
-        } else if (role == TokenRole.CLOSE) {
-            this.close[type] = token;
-            this.resolve([type]);
-        }
+        // Any token pushed into the queue will instantly be stated as `PENDING`.
+        token.status = TokenStatus.PENDING;
+        this.tokenMap[token.type] = token;
     }
-    getOpen(type: MainFormat) {
-        return this.open[type];
+    /** 
+     * Get queued token as specified by `type` parameter.
+     * Returns `null` if it isn't queued.
+     */
+    getToken(type: Format) {
+        return this.tokenMap[type] ?? null;
     }
     /**
      * Resolve type-specific token(s) in the queue. Resolving it means
      * that the token will no longer be in `PENDING` status. Instead, it
      * will be stated as `ACTIVE` or `INACTIVE` depending on presence of
-     * closing delimiter in the queue.
+     * closing delimiter, if it is required for that. Then, resolved token
+     * will be ejected from the map.
+     * 
+     * @param closed If false and the token's type requires to be closed,
+     * then the token will be resolved as `INACTIVE`. Otherwise, it will
+     * be stated as `ACTIVE`.
+     * 
+     * @param closedByBlankLine Resolved token is either closed by a blank
+     * line or not. It has no effect when `closed` is `true`.
+     * 
+     * @param to Only needed when `closed` is `false`. Used to specify
+     * the end offset of the resolved token.
      */
-    resolve(types: MainFormat[], to = this.state.globalOffset) {
+    resolve(types: Format[], closed: boolean, closedByBlankLine: boolean, to = this.state.globalOffset) {
         for (let type of types) {
-            let status: TokenStatus,
-                open = this.open[type],
-                content = this.content[type],
-                close = this.close[type];
-            if (!open) { continue }
-            if (close) {
-                let size = this.tokens.length - open.pointer;
-                status = TokenStatus.ACTIVE;
-                content!.to = close.from;
-                close.status = status;
-                close.size = content!.size = open.size = size;
-                this.close[type] = null;
+            let token = this.getToken(type);
+            // If token with this type doesn't exist, then continue to the next one.
+            if (!token) { continue }
+            // When it is an inline token.
+            if (token.level == TokenLevel.INLINE) {
+                // There is a type -that is highlight- that doesn't need to be closed.
+                if (!closed && InlineRules[type as InlineFormat].mustBeClosed) {
+                    token.status = TokenStatus.INACTIVE;
+                } else {
+                    token.status = TokenStatus.ACTIVE;
+                }
+            // When it is a block token.
             } else {
-                status = TokenStatus.INACTIVE;
-                content!.to = to;
+                // Block token doesn't need to be closed.
+                // Only the validity of its tag affects its status.
+                if (token.validTag) {
+                    token.status = TokenStatus.ACTIVE;
+                } else {
+                    token.status = TokenStatus.INACTIVE;
+                }
             }
-            if (type != Format.HIGHLIGHT) {
-                open.status = content!.status = status;
+            // Assign "to" value into token.to when "closed" is false.
+            if (!closed) {
+                token.to = to;
+                // Determine that the resolved token is either located after the blank line or not.
+                token.closedByBlankLine = closedByBlankLine;
             }
-            this.open[type] = this.content[type] = null;
+            // Eject the token from the queue.
+            delete this.tokenMap[type];
         }
     }
-    /** Resolve all existing token in the queue. Often used when facing boundary or a blank line. */
-    resolveAll(to = this.state.globalOffset) {
-        this.resolve([Format.INSERTION, Format.SPOILER, Format.SUPERSCRIPT, Format.SUBSCRIPT, Format.HIGHLIGHT], to);
+    /**
+     * Resolve all existing token in the queue. Often used when facing context boundary,
+     * blank line, or table separator. Should be executed without any closing delimiter
+     * has been met.
+     */
+    resolveAll(closedByBlankLine: boolean, to = this.state.globalOffset) {
+        this.resolve(Formats.ALL, false, closedByBlankLine, to);
     }
+    /** Clear all queued tokens. */
     clear() {
-        for (let type = Format.INSERTION as MainFormat; type <= Format.HIGHLIGHT; type++) {
-            this.open[type] = this.content[type] = this.close[type] = null;
-        }
-        (this.state as ParserState | undefined) = undefined;
+        this.tokenMap = {};
     }
 }

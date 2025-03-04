@@ -1,11 +1,16 @@
-import { Format, TokenRole } from "src/enums";
-import { DelimSpec, MainFormat } from "src/types";
-import { FormatRules } from "src/shared-configs";
+import { Delimiter, Format } from "src/enums";
+import { DelimSpec } from "src/types";
+import { BlockRules, InlineRules } from "src/shared-configs";
+import { isInlineFormat } from "src/utils";
 
-export function retrieveDelimSpec(type: MainFormat, role: TokenRole): DelimSpec {
-    if (type == Format.HIGHLIGHT) {
-        throw TypeError("Type must be either insertion, spoiler, sup, or sub");
+export function retrieveDelimSpec(type: Format, role: Delimiter): DelimSpec {
+    let char: string, length: number, exactLen: boolean, allowSpaceOnDelim: boolean;
+    if (isInlineFormat(type)) {
+        ({ char, length, exactLen } = InlineRules[type]);
+        allowSpaceOnDelim = false;
+    } else {
+        ({ char, length, exactLen } = BlockRules[type]);
+        allowSpaceOnDelim = true;
     }
-    let { char, length, exactLen } = FormatRules[type];
-    return { char, length, exactLen, role }
+    return { char, length, exactLen, role, allowSpaceOnDelim }
 }

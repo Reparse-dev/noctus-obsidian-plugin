@@ -1,4 +1,4 @@
-export const SkippedClasses = [
+export const SKIPPED_CLASSES = [
     "internal-link",
     "external-link",
     "math",

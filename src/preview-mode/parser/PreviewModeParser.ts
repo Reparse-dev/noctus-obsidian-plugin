@@ -1,7 +1,7 @@
-import { FormatRules } from "src/shared-configs";
+import { Formats, InlineRules } from "src/shared-configs";
 import { Format } from "src/enums";
-import { MainFormat2 } from "src/types";
-import { SkippedClasses, PreviewDelimLookup } from "src/preview-mode/configs";
+import { InlineFormat } from "src/types";
+import { SKIPPED_CLASSES, PreviewDelimLookup } from "src/preview-mode/configs";
 import { hasClasses, isWhitespace } from "src/preview-mode/utils";
 
 export class PreviewModeParser {
@@ -10,13 +10,8 @@ export class PreviewModeParser {
     offset = 0;
     curNode: Node;
     nodeChanged = false;
-    stack: MainFormat2[] = [];
-    queue: { [F in MainFormat2]: Range | null } = {
-        [Format.INSERTION]: null,
-        [Format.SPOILER]: null,
-        [Format.SUPERSCRIPT]: null,
-        [Format.SUBSCRIPT]: null
-    }
+    stack: InlineFormat[] = [];
+    queue: Partial<Record<InlineFormat, Range>> = {}
     parsingQueue: PreviewModeParser[];
     constructor(root: Element, parsingQueue: PreviewModeParser[]) {
         this.root = root;
@@ -64,8 +59,8 @@ export class PreviewModeParser {
         }
         this.nodeChanged = false;
     }
-    finalize(type: MainFormat2, open: Range, content: Range, close: Range) {
-        let wrapper = FormatRules[type].getEl();
+    finalize(type: InlineFormat, open: Range, content: Range, close: Range) {
+        let wrapper = InlineRules[type].getEl();
         close.deleteContents();
         content.surroundContents(wrapper);
         open.deleteContents();
@@ -76,14 +71,14 @@ export class PreviewModeParser {
         }
         this.nodeChanged = true;
     }
-    resolve(type: MainFormat2, close?: Range) {
+    resolve(type: InlineFormat, close?: Range) {
         if (close && this.queue[type]) {
             let content = new Range(),
                 open = this.queue[type];
             content.setStart(open.endContainer, open.endOffset);
             content.setEnd(close.startContainer, close.startOffset);
             this.stack.findLast((t, i) => {
-                this.queue[t] = null;
+                delete this.queue[t];
                 if (t == type) {
                     this.stack.splice(i);
                     return true;
@@ -91,17 +86,17 @@ export class PreviewModeParser {
             });
             this.finalize(type, open, content, close);
         } else {
-            this.queue[type] = null;
+            delete this.queue[type];
             this.stack = this.stack.filter(t => t != type);
         }
     }
     forceResolveAll() {
-        for (let i = Format.INSERTION as MainFormat2; i <= Format.SUPERSCRIPT; i++) {
-            this.resolve(i);
+        for (let i = 0; i < Formats.ALL_INLINE.length; i++) {
+            this.resolve(Formats.ALL_INLINE[i]);
         }
     }
-    tokenize(type: MainFormat2) {
-        let { length: reqLength, char } = FormatRules[type],
+    tokenize(type: InlineFormat) {
+        let { length: reqLength, char } = InlineRules[type],
             str = this.curNode.textContent!,
             length = 0,
             hasOpen = !!this.queue[type],
@@ -116,7 +111,7 @@ export class PreviewModeParser {
         this.pushDelim(type, range);
         return true;
     }
-    pushDelim(type: MainFormat2, delim: Range) {
+    pushDelim(type: InlineFormat, delim: Range) {
         if (this.queue[type]) {
             this.resolve(type, delim);
         } else {
@@ -141,7 +136,7 @@ export class PreviewModeParser {
     }
     isSkipped(el: Element) {
         return (
-            hasClasses(el, SkippedClasses) ||
+            hasClasses(el, SKIPPED_CLASSES) ||
             el.tagName == "CODE" || el.tagName == "IMG"
         );
     }

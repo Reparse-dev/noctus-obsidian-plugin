@@ -1,22 +1,26 @@
 import { MarkdownPostProcessor } from "obsidian";
-import { SettingOpt1 } from "src/enums";
+import { MarkdownViewMode } from "src/enums";
 import { PreviewModeParser } from "src/preview-mode/parser";
-import { CustomAlign, CustomHighlight } from "src/preview-mode/post-processor";
+import { FencedDiv, CustomHighlight, CustomSpan } from "src/preview-mode/post-processor/components";
 import { PluginSettings } from "src/types";
 
 export class PreviewExtendedSyntax {
     private readonly query = "p, h1, h2, h3, h4, h5, h6, td, th, li:not(:has(p)), .callout-title-inner";
-    private customAlign = new CustomAlign();
-    private customHighlight = new CustomHighlight();
+    private customHighlight: CustomHighlight;
+    private customSpan: CustomSpan;
+    private fencedDiv: FencedDiv;
     settings: PluginSettings;
     constructor(settings: PluginSettings) {
-        this.settings = Object.assign({}, settings);
+        this.settings = settings;
+        this.customHighlight = new CustomHighlight(settings);
+        this.customSpan = new CustomSpan(settings);
+        this.fencedDiv = new FencedDiv(settings);
     }
-    private decorate(container: HTMLElement) {
-        let targetedEls = container.querySelectorAll(this.query),
+    private parseInline(targetEl: HTMLElement) {
+        let targetedEls = targetEl.querySelectorAll(this.query),
             parsingQueue: PreviewModeParser[] = [];
-        if (container.classList.contains("table-cell-wrapper")) {
-            new PreviewModeParser(container, parsingQueue).streamParse();
+        if (targetEl.classList.contains("table-cell-wrapper")) {
+            new PreviewModeParser(targetEl, parsingQueue).streamParse();
             for (let i = 0; i < parsingQueue.length; i++) {
                 parsingQueue[i].streamParse();
                 if (i >= 100) { throw Error(`${parsingQueue}`) }
@@ -32,7 +36,7 @@ export class PreviewExtendedSyntax {
             parsingQueue.splice(0);
         }
     }
-    private toBeDecorated(container: HTMLElement) {
+    private isTargeted(container: HTMLElement) {
         let firstChild = container.firstElementChild;
         if (
             container.classList.contains("table-cell-wrapper") ||
@@ -46,17 +50,32 @@ export class PreviewExtendedSyntax {
         )) { return true }
         return false;
     }
-    postProcess: MarkdownPostProcessor = container => {
-        if (this.settings.customHighlight & SettingOpt1.PREVIEW_MODE) {
+    private decorate(container: HTMLElement) {
+        if (this.settings.customHighlight & MarkdownViewMode.PREVIEW_MODE) {
             this.customHighlight.decorate(container);
         }
         if (
-            this.settings.customAlign & SettingOpt1.PREVIEW_MODE &&
+            this.settings.fencedDiv & MarkdownViewMode.PREVIEW_MODE &&
             container.firstElementChild instanceof HTMLParagraphElement
         ) {
-            this.customAlign.decorate(container.firstElementChild);
+            this.fencedDiv.decorate(container.firstElementChild);
         }
-        if (this.toBeDecorated(container)) {
+        if (this.isTargeted(container)) {
+            this.parseInline(container);
+        }
+        if (this.settings.customSpan & MarkdownViewMode.PREVIEW_MODE) {
+            this.customSpan.decorate(container);
+        }
+    }
+    postProcess: MarkdownPostProcessor = (container) => {
+        let isWholeDoc = container.classList.contains("markdown-preview-view");
+        if (isWholeDoc) {
+            if (!this.settings.decoratePDF) { return }
+            let sectionEls = container.querySelectorAll<HTMLElement>("&>div");
+            for (let i = 0; i < sectionEls.length; i++) {
+                this.decorate(sectionEls[i]);
+            }
+        } else {
             this.decorate(container);
         }
     }

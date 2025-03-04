@@ -1,3 +1,3 @@
-import { MainFormat } from "src/types";
+import { InlineFormat } from "src/types";
 
-export const PreviewDelimLookup: Record<string, MainFormat> = {}
+export const PreviewDelimLookup: Record<string, InlineFormat> = {}

@@ -1,2 +1,2 @@
-export * from "./SkippedClasses";
+export * from "./SKIPPED_CLASSES";
 export * from "./PreviewDelimLookup";

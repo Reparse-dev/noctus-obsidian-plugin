@@ -2,8 +2,13 @@ import { StateEffect, StateField } from "@codemirror/state";
 import { Parser } from "src/editor-mode/parser";
 import { ParseContext, syntaxTree } from "@codemirror/language";
 import { Tree } from "@lezer/common";
-import { settingsFacet } from "../facets";
+import { settingsFacet } from "src/editor-mode/facets";
+import { refresherAnnot } from "src/editor-mode/annotations";
 
+/**
+ * In the context of extending syntax extension, this field should be the
+ * first in order.
+ */
 export const parserField = StateField.define({
     create(state) {
         let parser = new Parser(state.facet(settingsFacet.reader));
@@ -12,13 +17,29 @@ export const parserField = StateField.define({
     },
     update(parser, transaction) {
         let oldTree = syntaxTree(transaction.startState),
-            newTree = syntaxTree(transaction.state);
-        transaction.effects.forEach((value: StateEffect<{context: ParseContext, tree: Tree}>) => {
-            newTree = (value.value?.tree ?? newTree);
+            newTree = syntaxTree(transaction.state),
+            isRefreshed = transaction.annotation(refresherAnnot);
+        // Sometimes, there is an effect containing ParseContext and the most
+        // updated Tree along with the state update. If any, we should use it
+        // instead of that was taken from the state.
+        transaction.effects.forEach((effect: StateEffect<unknown>) => {
+            let updatedTree = (effect.value as Partial<{ context: ParseContext, tree: Tree }>)?.tree;
+            if (updatedTree instanceof Tree) {
+                newTree = updatedTree;
+            }
         });
+        if (isRefreshed) {
+            parser.initParse(transaction.newDoc, newTree);
+            return parser;
+        } else {
+            parser.isInitializing = false;
+        }
+        // Also, do reparse when the Tree got to be reparsed.
         if (transaction.docChanged || oldTree.length != newTree.length) {
             parser.applyChange(transaction.newDoc, newTree, oldTree, transaction.changes);
-		}
+		} else {
+            parser.isReparsing = false;
+        }
         return parser;
     }
 });

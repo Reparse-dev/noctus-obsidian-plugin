@@ -5,5 +5,5 @@ export function handleClosingDelim(state: ParserState, token: Token, closeLen: n
     token.closeLen = closeLen;
     token.to = state.globalOffset + closeLen;
     state.advance(closeLen);
-    state.queue.resolve([token.type], true);
+    state.queue.resolve([token.type], true, false);
 }

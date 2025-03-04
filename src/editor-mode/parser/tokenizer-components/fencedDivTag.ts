@@ -14,5 +14,5 @@ export function fencedDivTag(state: ParserState, token: Token) {
     }
     state.advance(token.tagLen - initTagLen);
     if (offset >= str.length) { token.validTag = true }
-    else { state.queue.resolve([token.type], false) }
+    else { state.queue.resolve([token.type], false, false) }
 }

@@ -1,4 +1,3 @@
-export * from "./FormatRules";
-export * from "./NonHighlightFormats";
-export * from "./SpaceAllowedFormats";
-export * from "./SpaceRestrictedFormats";
+export * from "./InlineRules";
+export * from "./BlockRules";
+export * from "./Formats";

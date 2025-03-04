@@ -2,16 +2,8 @@
  * Formatting type for each token.
  */
 export enum Format {
-    /** Align left mark */
-    ALIGN_LEFT = 1,
-    /** Align right mark */
-    ALIGN_RIGHT,
-    /** Align center mark */
-    ALIGN_CENTER,
-    /** Align justify mark */
-    ALIGN_JUSTIFY,
     /** Insertion (underline) */
-    INSERTION,
+    INSERTION = 1,
     /** Spoiler */
     SPOILER,
     /** Superscript */
@@ -20,6 +12,8 @@ export enum Format {
     SUBSCRIPT,
     /** Highlight */
     HIGHLIGHT,
-    /** Highlight color tag */
-    COLOR_TAG,
+    /** Custom span */
+    CUSTOM_SPAN,
+    /** Fenced div (custom block) */
+    FENCED_DIV
 }

@@ -32,6 +32,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
         containerEl.empty();
         let settingsUIConfig = retrieveSettingUIConfigs(settings);
         this.drawFromConfig(settingsUIConfig, containerEl);
+        this.isHidden = false;
     }
     hide(): void {
         if (this.refreshInternal) {
@@ -42,6 +43,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
         }
         this.refreshInternal = this.rebuildColorStyleRules = false;
         this.colorSettingItems.splice(0);
+        this.isHidden = true;
         super.hide();
     }
     removeSetting(setting: Setting) {
@@ -131,12 +133,29 @@ export class ExtendedSettingTab extends PluginSettingTab {
         if (collapsible) {
             controlSetting.setClass("is-collapsible");
         }
+        this.makeDragable(groupEl, evt => {
+            let oldIndex = evt.oldDraggableIndex,
+                newIndex = evt.newDraggableIndex,
+                colorConfigs = this.plugin.settings.colorConfigs;
+            if (this.isHidden || oldIndex === undefined || newIndex === undefined || oldIndex == newIndex) { return }
+            colorConfigs.splice(
+                Math.min(oldIndex, newIndex),
+                0,
+                ...colorConfigs.splice(Math.max(oldIndex, newIndex), 1)
+            );
+            this.plugin.colorsHandler.moveRule(oldIndex, newIndex);
+        });
     }
-    setColorItem(config: ColorConfig, configArr: ColorConfig[], containerEl: HTMLElement) {
+    setColorItem(config: ColorConfig, configs: ColorConfig[], containerEl: HTMLElement) {
         if (/[^a-z0-9-]/i.test(config.tag)) { config.tag = config.tag.replaceAll(/[^a-z0-9-]/ig, "") }
         let colorSetting = new Setting(containerEl)
             .setClass("ems-setting-item")
             .setClass("ems-highlight-color-config")
+            .addExtraButton(btn => {
+                btn.extraSettingsEl.addClasses(["ems-button", "ems-button-drag-handle"]);
+                btn.setIcon("grip-vertical");
+                btn.setTooltip("Hold and drag to move", { placement: "left" });
+            })
             .addText(text => {
                 text.setPlaceholder("Color name");
                 text.setValue(config.name);
@@ -295,6 +314,18 @@ export class ExtendedSettingTab extends PluginSettingTab {
                     field.callback(slider, this.plugin);
                 }
             });
+        });
+    }
+    makeDragable(groupEl: HTMLElement, onEnd: (evt: SortableEvent) => unknown) {
+        Sortable.create(groupEl, {
+            handle: ".ems-button-drag-handle",
+            animation: 200,
+            easing: "cubic-bezier(0.2, 0, 0, 1)",
+            forceFallback: true,
+            fallbackOnBody: true,
+            fallbackClass: "ems-setting-item-dragged",
+            fallbackTolerance: 4,
+            onEnd: onEnd,
         });
     }
 }

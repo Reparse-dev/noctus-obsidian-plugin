@@ -171,8 +171,8 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 btn.setIcon("trash");
                 btn.setTooltip("Delete");
                 btn.onClick(() => {
-                    let index = configArr.findIndex(target => target == config);
-                    configArr.splice(index, 1);
+                    let index = configs.findIndex(target => target == config);
+                    configs.splice(index, 1);
                     this.colorSettingItems.splice(index, 1);
                     this.plugin.colorsHandler.removeSingle(index);
                     this.removeSetting(colorSetting);
@@ -184,10 +184,10 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 btn.setIcon("arrow-up");
                 btn.setTooltip("Shift up");
                 btn.onClick(() => {
-                    let index = configArr.findIndex(target => target == config);
+                    let index = configs.findIndex(target => target == config);
                     if (index) {
                         moveElement(colorSetting.settingEl, -1)
-                        configArr.splice(index - 1, 0, configArr.splice(index, 1)[0]);
+                        configs.splice(index - 1, 0, configs.splice(index, 1)[0]);
                         this.plugin.colorsHandler.moveSingleRule(index, -1);
                         this.saveSettings({ internal: false, colors: true });
                     }
@@ -224,7 +224,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 text.onChange(tag => {
                     config.tag = tag.replaceAll(/[^a-z0-9-]/gi, "");
                     text.setValue(config.tag);
-                    let index = configArr.findIndex(target => target == config),
+                    let index = configs.findIndex(target => target == config),
                         ruleStr = createCSSRuleFromColorConfig(config);
                     this.plugin.colorsHandler.replace(ruleStr, index);
                     this.saveSettings({ internal: false, colors: true });
@@ -235,7 +235,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 picker.colorPickerEl.addClasses(["ems-field", "ems-field-color-picker"]);
                 picker.onChange(color => {
                     config.color = color;
-                    let index = configArr.findIndex(target => target == config),
+                    let index = configs.findIndex(target => target == config),
                         ruleStr = createCSSRuleFromColorConfig(config);
                     this.plugin.colorsHandler.replace(ruleStr, index);
                     this.saveSettings({ internal: false, colors: true });

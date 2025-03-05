@@ -204,7 +204,7 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
                 update: { colors: true }
             }]
         }, {
-            name: "Customize the colors",
+            name: "Color palettes",
             desc: "The first text field gives the name of the item in the color menu, " +
                 "and the second one sets the tag string to be used in highlight syntax.",
             preservedForColorSettings: true

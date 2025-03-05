@@ -289,27 +289,9 @@ export class SelectionObserver {
                 }
                 // Possibly to be undefined, espically when the last token was removed.
                 if (!tokens[index]) { continue }
-                callback?.(tokens[index], index, tokens, inSelection)
-                /* this.onIterate(level, tokens[index], index, tokens, inSelection);
-                if (!useRegistered) { callback?.(tokens[index], index, tokens, inSelection) } */
+                callback?.(tokens[index], index, tokens, inSelection);
             }
         }
-    }
-    /**
-     * Run all the handlers on iteration. Intentionally prepared for drawing
-     * selection-based decorations.
-     */
-    onIterate(level: TokenLevel, token: Token, index: number, tokens: TokenGroup, inSelection: boolean): void {
-        let handlers = this.handlers[level];
-        for (let i = 0; i < handlers.length; i++) {
-            handlers[i](token, index, tokens, inSelection);
-        }
-    }
-    registerIterationHandler(level: TokenLevel, callback: (token: Token, index: number, tokens: TokenGroup, inSelection: boolean) => unknown): void {
-        this.handlers[level].push(callback);
-    }
-    removeIterationHandler(level: TokenLevel, callback: (token: Token, index: number, tokens: TokenGroup, inSelection: boolean) => unknown): void {
-        this.handlers[level].remove(callback);
     }
     /** Check that the given range touches the current selection or not. */
     touchSelection(from: number, to: number): boolean {

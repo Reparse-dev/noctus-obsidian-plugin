@@ -295,6 +295,7 @@ export class SelectionObserver {
     }
     /** Check that the given range touches the current selection or not. */
     touchSelection(from: number, to: number): boolean {
+        this.checkSelectionIndexCache();
         let selectionRanges = this.selection.ranges,
             // The index cache seems to have a significant effect in the case of many
             // of the selections were applied at the same time.

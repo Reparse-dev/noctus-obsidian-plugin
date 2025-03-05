@@ -11,18 +11,19 @@ export class ExtendedSettingTab extends PluginSettingTab {
     plugin: Plugin.default;
     colorSettingItems: Setting[] = [];
     refreshInternal = false;
-    rebuildStyleSheet = false;
+    rebuildColorStyleRules = false;
+    isHidden = true;
     constructor(app: App, plugin: Plugin.default) {
         super(app, plugin);
         this.plugin = plugin;
     }
-    saveSettings(spec?: { internal?: boolean, stylesheet?: boolean }) {
+    saveSettings(spec?: { internal?: boolean, colors?: boolean }) {
         this.plugin.saveSettings();
         if (spec?.internal) {
             this.refreshInternal = true;
         }
-        if (spec?.stylesheet) {
-            this.rebuildStyleSheet = true;
+        if (spec?.colors) {
+            this.rebuildColorStyleRules = true;
         }
     }
     display(): void {
@@ -36,10 +37,10 @@ export class ExtendedSettingTab extends PluginSettingTab {
         if (this.refreshInternal) {
             this.plugin.refreshMarkdownView();
         }
-        if (this.rebuildStyleSheet) {
+        if (this.rebuildColorStyleRules) {
             this.plugin.rebuildColorsStyleSheet();
         }
-        this.refreshInternal = this.rebuildStyleSheet = false;
+        this.refreshInternal = this.rebuildColorStyleRules = false;
         this.colorSettingItems.splice(0);
         super.hide();
     }
@@ -115,7 +116,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
             this.plugin.addNewColor();
             let newSetting = this.setColorItem(colorConfigs.at(-1)!, colorConfigs, groupEl);
             newSetting.controlEl.querySelector<HTMLElement>(".ems-field-tag")?.focus();
-            this.saveSettings({ internal: false, stylesheet: false });
+            this.saveSettings({ internal: false, colors: false });
         });
         insertButton(controlSetting, "Reset to default", true, () => {
             this.colorSettingItems.forEach(setting => {
@@ -125,7 +126,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
             this.plugin.revertColorConfigs((config, configs) => {
                 this.setColorItem(config, configs, groupEl);
             });
-            this.saveSettings({ internal: false, stylesheet: true });
+            this.saveSettings({ internal: false, colors: true });
         });
         if (collapsible) {
             controlSetting.setClass("is-collapsible");
@@ -142,7 +143,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 text.inputEl.addClasses(["ems-field", "ems-field-name"]);
                 text.onChange(name => {
                     config.name = name;
-                    this.saveSettings({ internal: false, stylesheet: false });
+                    this.saveSettings({ internal: false, colors: false });
                 });
             })
             .addExtraButton(btn => {
@@ -156,7 +157,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                     this.colorSettingItems.splice(index, 1);
                     this.plugin.colorsHandler.removeSingle(index);
                     this.removeSetting(colorSetting);
-                    this.saveSettings({ internal: false, stylesheet: true });
+                    this.saveSettings({ internal: false, colors: true });
                 });
             })
             .addExtraButton(btn => {
@@ -169,7 +170,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                         moveElement(colorSetting.settingEl, -1)
                         configArr.splice(index - 1, 0, configArr.splice(index, 1)[0]);
                         this.plugin.colorsHandler.moveSingleRule(index, -1);
-                        this.saveSettings({ internal: false, stylesheet: true });
+                        this.saveSettings({ internal: false, colors: true });
                     }
                 });
             })
@@ -183,7 +184,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                         moveElement(colorSetting.settingEl, 1)
                         configArr.splice(index, 0, configArr.splice(index + 1, 1)[0]);
                         this.plugin.colorsHandler.moveSingleRule(index, 1);
-                        this.saveSettings({ internal: false, stylesheet: true });
+                        this.saveSettings({ internal: false, colors: true });
                     }
                 });
             })
@@ -194,7 +195,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 btn.onClick(() => {
                     config.showInMenu = !config.showInMenu;
                     btn.setIcon(config.showInMenu ? "eye" : "eye-off");
-                    this.saveSettings({ internal: false, stylesheet: false })
+                    this.saveSettings({ internal: false, colors: false })
                 });
             })
             .addText(text => {
@@ -207,7 +208,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                     let index = configArr.findIndex(target => target == config),
                         ruleStr = createCSSRuleFromColorConfig(config);
                     this.plugin.colorsHandler.replace(ruleStr, index);
-                    this.saveSettings({ internal: false, stylesheet: true });
+                    this.saveSettings({ internal: false, colors: true });
                 });
             })
             .addColorPicker(picker => {
@@ -218,7 +219,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
                     let index = configArr.findIndex(target => target == config),
                         ruleStr = createCSSRuleFromColorConfig(config);
                     this.plugin.colorsHandler.replace(ruleStr, index);
-                    this.saveSettings({ internal: false, stylesheet: true });
+                    this.saveSettings({ internal: false, colors: true });
                 });
             });
         this.colorSettingItems.push(colorSetting);

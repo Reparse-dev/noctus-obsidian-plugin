@@ -238,7 +238,7 @@ export type AbstractFieldDesc<TField extends Field, TRecord, TKey extends keyof 
     callback?: (component: FieldComponent<TField>, plugin: ExtendedMarkdownSyntax) => unknown,
     spec: FieldSpec<TField, TRecord[TKey]>,
     update?: {
-        stylesheet?: boolean,
+        colors?: boolean,
         internal?: boolean
     }
 };

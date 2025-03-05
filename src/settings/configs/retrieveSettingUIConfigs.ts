@@ -184,7 +184,7 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
                 callback: (slider, plugin) => {
                     plugin.setHlOpacity(slider.getValue(), Theme.LIGHT);
                 },
-                update: { stylesheet: true }
+                update: { colors: true }
             }]
         }, {
             name: "Color opacity in dark mode",
@@ -201,7 +201,7 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
                 callback: (slider, plugin) => {
                     plugin.setHlOpacity(slider.getValue(), Theme.DARK);
                 },
-                update: { stylesheet: true }
+                update: { colors: true }
             }]
         }, {
             name: "Customize the colors",

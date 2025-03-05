@@ -1,4 +1,5 @@
 import * as Plugin from 'main'
+import Sortable, { SortableEvent } from 'sortablejs';
 import { App, IconName, PluginSettingTab, Setting } from 'obsidian';
 import { Field, MarkdownViewMode, DisplayBehaviour } from 'src/enums';
 import { retrieveSettingUIConfigs } from 'src/settings/configs';
@@ -198,10 +199,10 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 btn.setIcon("arrow-down");
                 btn.setTooltip("Shift down");
                 btn.onClick(() => {
-                    let index = configArr.findIndex(target => target == config);
-                    if (index < configArr.length - 1) {
+                    let index = configs.findIndex(target => target == config);
+                    if (index < configs.length - 1) {
                         moveElement(colorSetting.settingEl, 1)
-                        configArr.splice(index, 0, configArr.splice(index + 1, 1)[0]);
+                        configs.splice(index, 0, configs.splice(index + 1, 1)[0]);
                         this.plugin.colorsHandler.moveSingleRule(index, 1);
                         this.saveSettings({ internal: false, colors: true });
                     }

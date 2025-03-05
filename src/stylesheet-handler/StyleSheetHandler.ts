@@ -66,6 +66,15 @@ export class StyleSheetHandler {
         this.insert(ruleStr, index + to);
         this.subHandlers.forEach(handler => handler.moveSingleRule(index, to));
     }
+    moveRule(fromIndex: number, toIndex: number) {
+        if (fromIndex == toIndex) { return }
+        let greaterIndex = Math.max(fromIndex, toIndex),
+            smallerIndex = Math.min(fromIndex, toIndex),
+            ruleStr = this.stylesheet.cssRules.item(greaterIndex)!.cssText;
+        this.removeSingle(greaterIndex);
+        this.insert(ruleStr, smallerIndex);
+        this.subHandlers.forEach(handler => handler.moveRule(fromIndex, toIndex));
+    }
     removeSingle(index: number) {
         this.stylesheet.deleteRule(index);
         this.subHandlers.forEach(handler => handler.removeSingle(index));

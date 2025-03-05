@@ -3,7 +3,7 @@ import { EditorView, ViewPlugin } from "@codemirror/view";
 import { builderField, decoSetField, parserField, selectionObserverField } from "src/editor-mode/state-fields";
 import { BuilderPlugin } from "src/editor-mode/view-plugin";
 
-const builderPlugin = ViewPlugin.fromClass(BuilderPlugin);
+export const builderPlugin = ViewPlugin.fromClass(BuilderPlugin);
 
 export const editorExtendedSyntax: Extension = [
     parserField,

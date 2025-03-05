@@ -21,6 +21,7 @@ export class SelectionObserver {
         [TokenLevel.INLINE]: [],
         [TokenLevel.BLOCK]: []
     };
+    maps: Partial<Record<TokenLevel, number[]>>[] = [];
     /**
      * All selection-based decorations, eg. omitted delimiters, that are
      * associated with these tokens should be redrawn.
@@ -89,12 +90,20 @@ export class SelectionObserver {
     locateSelectedTokens(level: TokenLevel): Region {
         let newSelectedRegion: Region = [],
             curRange: PlainRange | undefined;
+        this.clearMaps();
         // Moving the cached index to the fore edge of the selection and then
         // starting to look ahead involved tokens is not as efficient as way that
         // look involved tokens behind without altering the cached index. Note
         // that the efficiency of this process isn't so noticable in case of few
         // tokens exist.
-        this.lookBehind(level, (token, index) => {
+        this.lookBehind(level, (token, index, selectionIndex) => {
+            if (!this.maps[selectionIndex]?.[level]) {
+                this.maps[selectionIndex] = {
+                    [level]: [index]
+                };
+            } else {
+                this.maps[selectionIndex][level].unshift(index);
+            }
             if (!curRange || curRange.from != index + 1) {
                 curRange = { from: index, to: index + 1 };
                 newSelectedRegion.unshift(curRange);
@@ -103,7 +112,14 @@ export class SelectionObserver {
             }
         });
         curRange = newSelectedRegion.at(-1);
-        this.lookAhead(level, (token, index) => {
+        this.lookAhead(level, (token, index, selectionIndex) => {
+            if (!this.maps[selectionIndex]?.[level]) {
+                this.maps[selectionIndex] = {
+                    [level]: [index]
+                };
+            } else {
+                this.maps[selectionIndex][level].push(index);
+            }
             if (!curRange || curRange.to != index) {
                 curRange = { from: index, to: index + 1 };
                 newSelectedRegion.push(curRange);
@@ -130,7 +146,7 @@ export class SelectionObserver {
      * Look the tokens behind untill the start offset of the first selection.
      * Runs the callback when the current token touches the selection.
      */
-    lookBehind(level: TokenLevel, callback: (token: Token, index: number) => unknown): void {
+    lookBehind(level: TokenLevel, callback: (token: Token, index: number, selectionIndex: number) => unknown): void {
         let selectionRanges = this.selection.ranges,
             selectionIndex = selectionRanges.length - 1,
             tokens = this.parser.getTokens(level),
@@ -140,14 +156,14 @@ export class SelectionObserver {
             while (selectionRanges[selectionIndex].from > tokens[i].to) { selectionIndex-- }
             if (!selectionRanges[selectionIndex]) { break }
             if (selectionRanges[selectionIndex].to < tokens[i].from) { continue }
-            callback(tokens[i], i);
+            callback(tokens[i], i, selectionIndex);
         }
     }
     /**
      * Look the tokens ahead untill the end offset of the last selection.
      * Runs the callback when the current token touches the selection.
      */
-    lookAhead(level: TokenLevel, callback: (token: Token, index: number) => boolean | void): void {
+    lookAhead(level: TokenLevel, callback: (token: Token, index: number, selectionIndex: number) => boolean | void): void {
         let selectionRanges = this.selection.ranges,
             selectionIndex = 0,
             tokens = this.parser.getTokens(level),
@@ -157,7 +173,7 @@ export class SelectionObserver {
             while (selectionRanges[selectionIndex].to < tokens[i].from) { selectionIndex++ }
             if (!selectionRanges[selectionIndex]) { break }
             if (selectionRanges[selectionIndex].from > tokens[i].to) { continue }
-            callback(tokens[i], i);
+            callback(tokens[i], i, selectionIndex);
         }
     }
     /**
@@ -317,5 +333,13 @@ export class SelectionObserver {
             return true;
         }
         return false;
+    }
+    clearMaps() {
+        this.maps = [];
+    }
+    checkSelectionIndexCache() {
+        if (this.indexCaches.selection.number >= this.selection.ranges.length) {
+            this.indexCaches.selection.number = this.selection.ranges.length - 1;
+        }
     }
 }

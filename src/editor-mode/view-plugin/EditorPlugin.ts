@@ -4,7 +4,7 @@ import { builderField } from "src/editor-mode/state-fields";
 import { pluginFacet } from "src/editor-mode/facets";
 import ExtendedMarkdownSyntax from "main";
 
-export class BuilderPlugin implements PluginValue {
+export class EditorPlugin implements PluginValue {
     builder: DecorationBuilder;
     mainPlugin: ExtendedMarkdownSyntax;
     root: DocumentOrShadowRoot;
@@ -31,5 +31,8 @@ export class BuilderPlugin implements PluginValue {
         this.mainPlugin.colorsHandler.adopt(newRoot);
         this.mainPlugin.opacityHandler.adopt(newRoot);
         this.root = newRoot;
+    }
+    invokeColorMenu() {
+        
     }
 }

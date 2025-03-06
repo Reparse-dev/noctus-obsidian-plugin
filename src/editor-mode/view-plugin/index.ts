@@ -1,1 +1,1 @@
-export * from "./BuilderPlugin";
+export * from "./EditorPlugin";

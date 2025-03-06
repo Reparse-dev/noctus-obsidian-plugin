@@ -1,0 +1,144 @@
+import { EditorView } from "@codemirror/view";
+import { Menu } from "obsidian";
+import { ColorConfig, PlainRange, Token } from "src/types";
+import { appFacet, settingsFacet } from "src/editor-mode/facets";
+import { getActiveCanvasNodeCoords } from "src/editor-mode/utils";
+
+export class ColorMenu extends Menu {
+    openRange: PlainRange;
+    tagRange: PlainRange;
+    closeRange: PlainRange;
+    view: EditorView;
+    private constructor(view: EditorView, openRange: PlainRange, tagRange: PlainRange, closeRange: PlainRange) {
+        super();
+        this.view = view;
+        this.openRange = openRange;
+        this.tagRange = tagRange;
+        this.closeRange = closeRange;
+        this.dom.addClass("highlight-colors-modal");
+    }
+    get openLen() {
+        return this.openRange.to - this.openRange.from;
+    }
+    get closeLen() {
+        return this.closeRange.to - this.closeRange.from;
+    }
+    get tagLen() {
+        return this.tagRange.to - this.tagRange.from;
+    }
+    addColorConfigs(configs: ColorConfig[]) {
+        configs.forEach(({ name, tag, showInMenu }) => {
+            if (!showInMenu) { return }
+            this.setItem(name, "palette", "menu-item-" + tag, () => { this.changeColor(tag) })
+        });
+    }
+    addAccent() {
+        this.setItem("Accent", "palette", "menu-item-accent", () => { this.changeColor("accent") });
+    }
+    addDefault() {
+        this.setItem("Default", "palette", "menu-item-default", () => { this.toDefault() });
+    }
+    addRemove() {
+        this.setItem("Remove", "eraser", "menu-item-remove-highlight", () => { this.removeColor() });
+    }
+    setItem(title: string, icon: string, cls: string, callback: (evt: MouseEvent | KeyboardEvent) => unknown) {
+        this.addItem(item => {
+            item.setTitle(title);
+            item.setIcon(icon);
+            item.dom.addClass(cls);
+            item.onClick(callback);
+        });
+    }
+    showMenu() {
+        this.view.requestMeasure({
+            read: (view) => {
+                let app = view.state.facet(appFacet.reader),
+                    canvasNodeCoords = getActiveCanvasNodeCoords(app),
+                    charCoords = view.coordsForChar(this.tagRange.from);
+                return { charCoords, canvasNodeCoords };
+            },
+            write: (measure) => {
+                let { charCoords, canvasNodeCoords } = measure;
+                if (charCoords) {
+                    let menuCoords = { x: charCoords.left, y: charCoords.bottom };
+                    if (canvasNodeCoords) {
+                        menuCoords.x += canvasNodeCoords.x;
+                        menuCoords.y += canvasNodeCoords.y;
+                    }
+                    this.showAtPosition(menuCoords);
+                }
+            }
+        });
+    }
+    adjustPos(differ: number) {
+        this.tagRange.to += differ;
+        this.closeRange.from += differ;
+        this.closeRange.to += differ;
+    }
+    changeColor(color: string) {
+        this.view?.dispatch({
+            changes: {
+                from: this.tagRange.from,
+                to: this.tagRange.to,
+                insert: `{${color}}`
+            }
+        });
+        let differ = color.length + 2 - (this.tagRange.to - this.tagRange.from);
+        this.adjustPos(differ);
+    }
+    removeColor() {
+        this.view.dispatch({
+            changes: [{
+                from: this.openRange.from,
+                to: this.tagRange.to,
+                insert: ""
+            }, {
+                from: this.closeRange.from,
+                to: this.closeRange.to,
+                insert: ""
+            }]
+        });
+    }
+    toDefault() {
+        this.view.dispatch({
+            changes: {
+                from: this.tagRange.from,
+                to: this.tagRange.to,
+                insert: ""
+            }
+        });
+        let tagLen = this.tagLen;
+        this.adjustPos(-tagLen);
+    }
+    onunload() {
+        (this.view as unknown as null) = null;
+        super.onunload();
+    }
+    static create(
+        view: EditorView,
+        openRange: PlainRange,
+        tagRange: PlainRange,
+        closeRange: PlainRange,
+        option: { default?: boolean, accent?: boolean, remove?: boolean } = { default: true, accent: true, remove: true }
+    ) {
+        let colorMenu = new ColorMenu(view, openRange, tagRange, closeRange),
+            colorConfigs = view.state.facet(settingsFacet).colorConfigs;
+        colorMenu.addColorConfigs(colorConfigs);
+        if (option?.accent) { colorMenu.addAccent() }
+        if (option?.default) { colorMenu.addDefault() }
+        if (option?.remove) { colorMenu.addRemove() }
+        return colorMenu;
+    }
+    static fromToken(view: EditorView, hlToken: Token, option: { default?: boolean, accent?: boolean, remove?: boolean } = { default: true, accent: true, remove: true }) {
+        let openRange = { from: hlToken.from, to: hlToken.from + hlToken.openLen },
+            tagRange = { from: openRange.to, to: openRange.to + hlToken.tagLen },
+            closeRange = { from: hlToken.to - hlToken.closeLen, to: hlToken.to },
+            colorConfigs = view.state.facet(settingsFacet).colorConfigs,
+            colorMenu = new ColorMenu(view, openRange, tagRange, closeRange);
+        colorMenu.addColorConfigs(colorConfigs);
+        if (option?.accent) { colorMenu.addAccent() }
+        if (option?.default) { colorMenu.addDefault() }
+        if (option?.remove) { colorMenu.addRemove() }
+        return colorMenu;
+    }
+}

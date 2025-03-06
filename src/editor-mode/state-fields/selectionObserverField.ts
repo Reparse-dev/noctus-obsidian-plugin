@@ -9,10 +9,12 @@ export const selectionObserverField = StateField.define({
         return observer;
     },
     update(observer, transaction) {
-        // Start observer only when the parser was run or the selection was moved.
-        let selectionMoved = !(transaction.selection && transaction.startState.selection.eq(transaction.selection));
-        if (observer.parser.isReparsing || observer.parser.isInitializing || selectionMoved) {
-            observer.startObserve(transaction.newSelection, transaction.docChanged);
+        // Start observer only when the parser has run or the selection has been moved.
+        let selectionMoved = !(transaction.selection && transaction.startState.selection.eq(transaction.selection)),
+            isParsing = observer.parser.isReparsing || observer.parser.isInitializing;
+        transaction.isUserEvent("select");
+        if (isParsing || selectionMoved) {
+            observer.startObserve(transaction.newSelection, isParsing);
         } else {
             observer.isObserving = false;
         }

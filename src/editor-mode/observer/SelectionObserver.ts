@@ -58,7 +58,7 @@ export class SelectionObserver {
      * All the methods below should be run inside this. Don't try to run
      * them separately.
      */
-    startObserve(selection: EditorSelection, docChanged: boolean): void {
+    startObserve(selection: EditorSelection, isParsing: boolean): void {
         this.selection = selection;
         this.checkIndexCache();
         this.isObserving = true;
@@ -68,18 +68,18 @@ export class SelectionObserver {
             // At the moment, changed and filter region are only applied to block-
             // level tokens.
             if (level == TokenLevel.INLINE) { continue }
-            this.mapChangedRegion(level, oldSelectedRegion, docChanged);
+            this.mapChangedRegion(level, oldSelectedRegion, isParsing);
             this.createFilter(level);
         }
     }
-    restartObserver(selection: EditorSelection, docChanged: boolean): void {
+    restartObserver(selection: EditorSelection, isParsing: boolean): void {
         this.selection = selection;
         this.checkIndexCache();
         this.isObserving = true;
         for (let level = TokenLevel.BLOCK as TokenLevel; level <= TokenLevel.INLINE; level++) {
             let oldSelectedRegion: Region = [];
             this.locateSelectedTokens(level);
-            this.mapChangedRegion(level, oldSelectedRegion, docChanged, true);
+            this.mapChangedRegion(level, oldSelectedRegion, isParsing, true);
             this.createFilter(level);
         }
     }
@@ -225,7 +225,7 @@ export class SelectionObserver {
      * by a document change. Hence, `mapChangedRegion` comes to map the
      * token indexes region that should be redrawn.
      */
-    mapChangedRegion(level: TokenLevel, oldSelectedRegion: Region, docChanged: boolean, restart?: boolean): Region {
+    mapChangedRegion(level: TokenLevel, oldSelectedRegion: Region, isParsing: boolean, restart?: boolean): Region {
         let reparsedRange = this.parser.reparsedRanges[level],
             reparsedLength = reparsedRange.changedTo - reparsedRange.initTo,
             mappedRegion: Region = [],
@@ -237,8 +237,8 @@ export class SelectionObserver {
                 : [];
         }
         // Don't map the previous selected region when there is actually no
-        // reparsed tokens.
-        if (!docChanged || reparsedRange.from == reparsedRange.initTo && !reparsedLength) {
+        // parsing activity.
+        if (!isParsing || reparsedRange.from == reparsedRange.initTo && !reparsedLength) {
             return this.changedRegions[level] = joinRegions(oldSelectedRegion, this.selectedRegions[level]);
         }
         // Use either reparsed range or selected region directly when there is no

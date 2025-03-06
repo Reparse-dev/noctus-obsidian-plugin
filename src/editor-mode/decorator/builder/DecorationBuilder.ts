@@ -80,9 +80,11 @@ export class DecorationBuilder {
             isLivePreview = state.field(editorLivePreviewField);
         if (this.parser.isReparsing || this.parser.isInitializing || update.viewportMoved) {
             this.buildMain(view, state);
+            this.parser.isReparsing = this.parser.isInitializing = false;
         }
         if (this.selectionObserver.isObserving || update.viewportMoved) {
             this.buildSupplementary(isLivePreview);
+            this.selectionObserver.isObserving = false;
         }
     }
     /**

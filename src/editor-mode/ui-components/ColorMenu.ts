@@ -55,7 +55,8 @@ export class ColorMenu extends Menu {
             });
         });
     }
-    showMenu() {
+    showMenu(offset?: number) {
+        this.checkItemIndexCache();
         this.view.requestMeasure({
             read: (view) => {
                 let app = view.state.facet(appFacet.reader),
@@ -72,6 +73,7 @@ export class ColorMenu extends Menu {
                         menuCoords.y += canvasNodeCoords.y;
                     }
                     this.showAtPosition(menuCoords);
+                    this.select(this.itemIndexCache.number);
                 }
             }
         });

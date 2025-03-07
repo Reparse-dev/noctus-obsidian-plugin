@@ -63,7 +63,10 @@ export class ColorMenu extends Menu {
             read: (view) => {
                 let app = view.state.facet(appFacet.reader),
                     canvasNodeCoords = getActiveCanvasNodeCoords(app),
-                    charCoords = view.coordsForChar(this.tagRange.from);
+                    charCoords = view.coordsForChar((offset ?? this.tagRange.from));
+                if (offset !== undefined && !charCoords) {
+                    charCoords = view.coordsForChar(offset - 1);
+                }
                 return { charCoords, canvasNodeCoords };
             },
             write: (measure) => {

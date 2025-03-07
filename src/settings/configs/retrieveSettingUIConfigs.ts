@@ -157,7 +157,7 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
             }]
         }]
     }, {
-        heading: "Customize highlight",
+        heading: "Custom highlight",
         collapsible: true,
         items: [{
             name: "Color button",

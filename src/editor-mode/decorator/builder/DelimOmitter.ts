@@ -68,6 +68,6 @@ export class DelimOmitter {
                 }
             }
         }
-        return Decoration.set(omittedRanges);
+        return Decoration.set(omittedRanges, true);
     }
 }

@@ -37,7 +37,7 @@ export class ColorButton extends WidgetType {
                     head: this.tagRange.to
                 }
             });
-            this.colorMenu = ColorMenu.create(view, this.openRange, this.tagRange, this.closeRange);
+            this.colorMenu = ColorMenu.create(view, this.openRange, this.tagRange, this.closeRange, true);
             this.colorMenu.showMenu();
         }
         return btn;

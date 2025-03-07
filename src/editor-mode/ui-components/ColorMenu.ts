@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view";
 import { Menu } from "obsidian";
-import { ColorConfig, PlainRange, Token } from "src/types";
+import { ColorConfig, IndexCache, PlainRange, Token } from "src/types";
 import { appFacet, settingsFacet } from "src/editor-mode/facets";
 import { getActiveCanvasNodeCoords } from "src/editor-mode/utils";
 
@@ -8,6 +8,7 @@ export class ColorMenu extends Menu {
     openRange: PlainRange;
     tagRange: PlainRange;
     closeRange: PlainRange;
+    itemIndexCache: IndexCache;
     view: EditorView;
     private constructor(view: EditorView, openRange: PlainRange, tagRange: PlainRange, closeRange: PlainRange) {
         super();
@@ -16,6 +17,7 @@ export class ColorMenu extends Menu {
         this.tagRange = tagRange;
         this.closeRange = closeRange;
         this.dom.addClass("highlight-colors-modal");
+        this.itemIndexCache = itemIndexCache;
     }
     get openLen() {
         return this.openRange.to - this.openRange.from;
@@ -46,7 +48,11 @@ export class ColorMenu extends Menu {
             item.setTitle(title);
             item.setIcon(icon);
             item.dom.addClass(cls);
-            item.onClick(callback);
+            item.onClick(evt => {
+                let index = this.items.findIndex(i => i == item);
+                this.itemIndexCache.number = index;
+                callback(evt);
+            });
         });
     }
     showMenu() {
@@ -113,6 +119,11 @@ export class ColorMenu extends Menu {
     onunload() {
         (this.view as unknown as null) = null;
         super.onunload();
+    }
+    checkItemIndexCache() {
+        if (this.itemIndexCache.number >= this.items.length) {
+            this.itemIndexCache.number = this.items.length - 1;
+        }
     }
     static create(
         view: EditorView,

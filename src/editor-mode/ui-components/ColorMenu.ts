@@ -9,6 +9,7 @@ export class ColorMenu extends Menu {
     tagRange: PlainRange;
     closeRange: PlainRange;
     itemIndexCache: IndexCache;
+    moveCursorAfterTag: boolean;
     view: EditorView;
     private constructor(view: EditorView, openRange: PlainRange, tagRange: PlainRange, closeRange: PlainRange) {
         super();
@@ -16,6 +17,7 @@ export class ColorMenu extends Menu {
         this.openRange = openRange;
         this.tagRange = tagRange;
         this.closeRange = closeRange;
+        this.moveCursorAfterTag = moveCursorAfterTag;
         this.dom.addClass("highlight-colors-modal");
         this.itemIndexCache = itemIndexCache;
     }
@@ -84,15 +86,22 @@ export class ColorMenu extends Menu {
         this.closeRange.to += differ;
     }
     changeColor(color: string) {
-        this.view?.dispatch({
-            changes: {
-                from: this.tagRange.from,
-                to: this.tagRange.to,
-                insert: `{${color}}`
-            }
-        });
+        let oldTagRange = { from: this.tagRange.from, to: this.tagRange.to };
         let differ = color.length + 2 - (this.tagRange.to - this.tagRange.from);
         this.adjustPos(differ);
+        this.view.dispatch({
+            changes: {
+                from: oldTagRange.from,
+                to: oldTagRange.to,
+                insert: `{${color}}`
+            }
+        }, {
+            selection: this.moveCursorAfterTag ? {
+                anchor: this.tagRange.to,
+                head: this.tagRange.to
+            } : undefined,
+            sequential: true
+        });
     }
     removeColor() {
         this.view.dispatch({

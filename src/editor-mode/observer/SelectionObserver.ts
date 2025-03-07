@@ -309,6 +309,69 @@ export class SelectionObserver {
             }
         }
     }
+    /**
+     * Iterate over tokens that are inside, intersected by, or touched by
+     * selection. `to` in each range isn't included in the iteration. Return
+     * it `false` to cut off the iteration.
+     * 
+     * @param watchPos - If true, the last argument of the callback will be
+     * passed, either `"covered"` (selection covers all across the range
+     * of the token), `"intersect"` (selection covers a part of the token),
+     * `"adjacent"` (selection just touches one of its edges), or
+     * `"covering"` (range of the selection being covered by the token).
+     * Otherwise, will be passed as `undefined`.
+     */
+    iterateSelectedRegion(level: TokenLevel, watchPos: boolean, callback?: (token: Token, index: number, tokens: TokenGroup, pos: undefined | "covered" | "intersect" | "covering" | "adjacent") => void | boolean) {
+        let tokens = this.parser.getTokens(level),
+            selectionRanges = this.selection.ranges,
+            selectedRegion = this.selectedRegions[level],
+            // Cache of previous indexed token and amount of selection(s) are
+            // touched by it.
+            prevIndexedToken: undefined | { token: Token, selections: number };
+        // i => selected range index
+        // j => selection range index
+        // k => token index
+        for (let i = 0, j = 0; i < selectedRegion.length; i++) {
+            let selectedRange = selectedRegion[i];
+            for (let k = selectedRange.from; k < selectedRange.to; k++) {
+                let token = tokens[k],
+                    pos: "covered" | "intersect" | "adjacent" | "covering" | undefined;
+                // Withdraw selection range index and reduce it by previous amount of
+                // selections being touched by previous token, if the current token was
+                // placed under or intersect with that token. Probably it shares the same
+                // selection.
+                if (prevIndexedToken) {
+                    let prevToken = prevIndexedToken.token;
+                    if (prevToken.from <= token.to && prevToken.to >= token.from) {
+                        j -= prevIndexedToken.selections;
+                    }
+                }
+                prevIndexedToken = { token, selections: 0 };
+                // There is no token that isn't touched by any selection at least.
+                while (token.to < selectionRanges[j].from) { j++ }
+                // A single token could be touched by more than one selection.
+                while (selectionRanges[j] && token.to >= selectionRanges[j].from) {
+                    if (watchPos) {
+                        // Relative position precedence order:
+                        // covered -> covering -> intersect -> adjacent
+                        if (pos != "covered" && token.from >= selectionRanges[j].from && token.to <= selectionRanges[j].to) {
+                            pos = "covered";
+                        } else if (pos != "covering" && token.from < selectionRanges[j].from && token.to > selectionRanges[j].to) {
+                            pos = "covering";
+                        } else if (pos === undefined && (token.from == selectionRanges[j].to || token.to == selectionRanges[j].from)) {
+                            pos = "adjacent";
+                        } else if (pos === undefined || pos === "adjacent") {
+                            pos = "intersect";
+                        }
+                    }
+                    j++;
+                    prevIndexedToken.selections++;
+                }
+                // If callback returned false, cut the iteration off.
+                if (callback?.(token, k, tokens, pos) === false) { return };
+            }
+        }
+    }
     /** Check that the given range touches the current selection or not. */
     touchSelection(from: number, to: number): boolean {
         this.checkSelectionIndexCache();

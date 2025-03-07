@@ -96,7 +96,7 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
             }]
         }]
     }, {
-        heading: "Tag display behaviour",
+        heading: "Tag display behavior",
         collapsible: true,
         items: [{
             name: "Highlight tag in live-preview mode",

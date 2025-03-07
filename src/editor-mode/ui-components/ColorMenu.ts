@@ -11,7 +11,7 @@ export class ColorMenu extends Menu {
     itemIndexCache: IndexCache;
     moveCursorAfterTag: boolean;
     view: EditorView;
-    private constructor(view: EditorView, openRange: PlainRange, tagRange: PlainRange, closeRange: PlainRange) {
+    private constructor(view: EditorView, openRange: PlainRange, tagRange: PlainRange, closeRange: PlainRange, moveCursorAfterTag: boolean, itemIndexCache: IndexCache) {
         super();
         this.view = view;
         this.openRange = openRange;
@@ -141,9 +141,11 @@ export class ColorMenu extends Menu {
         openRange: PlainRange,
         tagRange: PlainRange,
         closeRange: PlainRange,
+        moveCursorAfterTag: boolean,
+        itemIndexCache: IndexCache = { number: 0 },
         option: { default?: boolean, accent?: boolean, remove?: boolean } = { default: true, accent: true, remove: true }
     ) {
-        let colorMenu = new ColorMenu(view, openRange, tagRange, closeRange),
+        let colorMenu = new ColorMenu(view, openRange, tagRange, closeRange, moveCursorAfterTag, itemIndexCache),
             colorConfigs = view.state.facet(settingsFacet).colorConfigs;
         colorMenu.addColorConfigs(colorConfigs);
         if (option?.accent) { colorMenu.addAccent() }
@@ -151,12 +153,12 @@ export class ColorMenu extends Menu {
         if (option?.remove) { colorMenu.addRemove() }
         return colorMenu;
     }
-    static fromToken(view: EditorView, hlToken: Token, option: { default?: boolean, accent?: boolean, remove?: boolean } = { default: true, accent: true, remove: true }) {
+    static fromToken(view: EditorView, hlToken: Token, moveCursorAfterTag: boolean, itemIndexCache: IndexCache = { number: 0 }, option: { default?: boolean, accent?: boolean, remove?: boolean } = { default: true, accent: true, remove: true }) {
         let openRange = { from: hlToken.from, to: hlToken.from + hlToken.openLen },
             tagRange = { from: openRange.to, to: openRange.to + hlToken.tagLen },
             closeRange = { from: hlToken.to - hlToken.closeLen, to: hlToken.to },
             colorConfigs = view.state.facet(settingsFacet).colorConfigs,
-            colorMenu = new ColorMenu(view, openRange, tagRange, closeRange);
+            colorMenu = new ColorMenu(view, openRange, tagRange, closeRange, moveCursorAfterTag, itemIndexCache);
         colorMenu.addColorConfigs(colorConfigs);
         if (option?.accent) { colorMenu.addAccent() }
         if (option?.default) { colorMenu.addDefault() }

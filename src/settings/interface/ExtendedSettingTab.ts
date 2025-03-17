@@ -1,18 +1,29 @@
 import * as Plugin from 'main'
 import Sortable, { SortableEvent } from 'sortablejs';
 import { App, IconName, PluginSettingTab, Setting } from 'obsidian';
-import { Field, MarkdownViewMode, DisplayBehaviour } from 'src/enums';
-import { retrieveSettingUIConfigs } from 'src/settings/configs';
-import { ColorConfig, DropdownFieldDesc, MultiToggleFieldDesc, PluginSettings, SettingGroup, SettingItem, SettingRoot, SliderFieldDesc, ToggleFieldDesc } from 'src/types';
+import { Field, MarkdownViewMode, DisplayBehaviour, Format } from 'src/enums';
+import { COLOR_SETTINGS_SPEC, DIV_TAG_SETTINGS_SPEC, SPAN_TAG_SETTINGS_SPEC, getTagConfigs, retrieveSettingUIConfigs } from 'src/settings/configs';
+import { DropdownFieldDesc, MultiToggleFieldDesc, PluginSettings, SettingGroup, SettingItem, SettingRoot, SliderFieldDesc, TagConfig, TagSettingsSpec, ToggleFieldDesc } from 'src/types';
 import { collapseElsBelow, insertButton } from 'src/settings/interface/utils';
-import { createCSSRuleFromColorConfig } from 'src/color-management';
-import { moveElement } from 'src/utils';
 
 export class ExtendedSettingTab extends PluginSettingTab {
     plugin: Plugin.default;
-    colorSettingItems: Setting[] = [];
-    refreshInternal = false;
+    tagSettingItems: Record<Format.HIGHLIGHT | Format.CUSTOM_SPAN | Format.FENCED_DIV, Setting[]> = {
+        [Format.HIGHLIGHT]: [],
+        [Format.CUSTOM_SPAN]: [],
+        [Format.FENCED_DIV]: []
+    };
+    collapsedGroups: Record<string, boolean> = {
+        "syntax-switch": true,
+        "formatting": true,
+        "tag-display": true,
+        "custom-highlight": true,
+        "custom-span": true,
+        "fenced-div": true,
+        "others": true
+    };
     rebuildColorStyleRules = false;
+    refreshInternal = false;
     isHidden = true;
     constructor(app: App, plugin: Plugin.default) {
         super(app, plugin);
@@ -43,9 +54,14 @@ export class ExtendedSettingTab extends PluginSettingTab {
             this.plugin.rebuildColorsStyleSheet();
         }
         this.refreshInternal = this.rebuildColorStyleRules = false;
-        this.colorSettingItems.splice(0);
+        this.emptyTagSettingItems();
         this.isHidden = true;
         super.hide();
+    }
+    emptyTagSettingItems() {
+        for (let type of [Format.HIGHLIGHT, Format.CUSTOM_SPAN, Format.FENCED_DIV] as (keyof typeof this.tagSettingItems)[]) {
+            this.tagSettingItems[type].splice(0);
+        }
     }
     removeSetting(setting: Setting) {
         setting.clear();
@@ -53,10 +69,17 @@ export class ExtendedSettingTab extends PluginSettingTab {
     }
     drawFromConfig(config: SettingRoot<PluginSettings>, containerEl: HTMLElement) {
         for (let group of config) {
+            let isCollapsing = this.collapsedGroups[group.id];
             if (group.heading) { this.drawHeading(group, containerEl) }
             for (let item of group.items) {
-                this.drawSettingItem(item, containerEl, group.collapsible);
-                if (item.preservedForColorSettings) { this.drawColorSettings(containerEl, group.collapsible) }
+                this.drawSettingItem(item, containerEl, group.collapsible, isCollapsing);
+                if (item.preservedForTagSettings == Format.HIGHLIGHT) {
+                    this.drawTagSettings(containerEl, COLOR_SETTINGS_SPEC, group.collapsible, isCollapsing);
+                } else if (item.preservedForTagSettings == Format.CUSTOM_SPAN) {
+                    this.drawTagSettings(containerEl, SPAN_TAG_SETTINGS_SPEC, group.collapsible, isCollapsing);
+                } else if (item.preservedForTagSettings == Format.FENCED_DIV) {
+                    this.drawTagSettings(containerEl, DIV_TAG_SETTINGS_SPEC, group.collapsible, isCollapsing);
+                }
             }
         }
     }
@@ -73,30 +96,40 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 let btnEl = btn.extraSettingsEl;
                 btn
                     .setIcon("chevron-down")
-                    .setTooltip("Collapse", { placement: "bottom" })
                     .onClick(() => {
                         let btnEl = btn.extraSettingsEl;
                         collapseElsBelow(heading.settingEl);
                         if (btnEl.hasClass("collapsing")) {
                             btn.setTooltip("Collapse", { placement: "bottom" });
                             btnEl.removeClass("collapsing");
+                            delete this.collapsedGroups[group.id];
                         } else {
                             btn.setTooltip("Expand", { placement: "bottom" });
                             btnEl.addClass("collapsing");
+                            this.collapsedGroups[group.id] = true;
                         }
                     });
                 btnEl.addClass("collapse-button", "ems-button");
+                if (this.collapsedGroups[group.id]) {
+                    btnEl.addClass("collapsing");
+                    btn.setTooltip("Expand", { placement: "bottom" });
+                } else {
+                    btn.setTooltip("Collapse", { placement: "bottom" });
+                }
             });
             heading.controlEl.addClass("collapse-control");
         }
     }
-    drawSettingItem(item: SettingItem<PluginSettings>, containerEl: HTMLElement, collapsible?: boolean) {
+    drawSettingItem(item: SettingItem<PluginSettings>, containerEl: HTMLElement, collapsible?: boolean, isCollapsing?: boolean) {
         let setting = new Setting(containerEl).setName(item.name);
         if (item.desc) {
             setting.setDesc(item.desc);
         }
         if (collapsible) {
-            setting.setClass("is-collapsible")
+            setting.setClass("is-collapsible");
+            if (isCollapsing) {
+                setting.setClass("collapsed");
+            }
         }
         if (item.fields) {
             for (let field of item.fields) {
@@ -107,63 +140,67 @@ export class ExtendedSettingTab extends PluginSettingTab {
             }
         }
     }
-    drawColorSettings(containerEl: HTMLElement, collapsible?: boolean) {
-        let colorConfigs = this.plugin.settings.colorConfigs,
+    drawTagSettings(containerEl: HTMLElement, spec: TagSettingsSpec, collapsible?: boolean, isCollapsing?: boolean) {
+        let configs = getTagConfigs(this.plugin.settings, spec.type),
             groupEl = containerEl.createDiv({ cls: ["setting-item", "setting-group", "ems-setting-group"] });
-        if (collapsible) { groupEl.addClass("is-collapsible") }
-        colorConfigs.forEach(config => {
-            this.setColorItem(config, colorConfigs, groupEl);
+        configs.forEach(config => {
+            this.setTagItem(spec, config, configs, groupEl);
         });
         let controlSetting = new Setting(containerEl);
-        insertButton(controlSetting, "Add color", false, () => {
-            this.plugin.addNewColor();
-            let newSetting = this.setColorItem(colorConfigs.at(-1)!, colorConfigs, groupEl);
+        insertButton(controlSetting, spec.addBtnPlaceholder, false, () => {
+            this.plugin.addTagConfig(spec.type);
+            let newSetting = this.setTagItem(spec, configs.at(-1)!, configs, groupEl);
             newSetting.controlEl.querySelector<HTMLElement>(".ems-field-tag")?.focus();
-            this.saveSettings({ internal: false, colors: false });
+            this.saveSettings();
         });
         insertButton(controlSetting, "Reset to default", true, () => {
-            this.colorSettingItems.forEach(setting => {
+            this.tagSettingItems[spec.type].forEach(setting => {
                 this.removeSetting(setting);
             });
-            this.colorSettingItems.splice(0);
-            this.plugin.revertColorConfigs((config, configs) => {
-                this.setColorItem(config, configs, groupEl);
+            this.tagSettingItems[spec.type].splice(0);
+            this.plugin.revertTagConfigs(spec.type, (config, configs) => {
+                this.setTagItem(spec, config, configs, groupEl);
             });
-            this.saveSettings({ internal: false, colors: true });
+            this.saveSettings();
+            spec.onResetted?.(this);
         });
         if (collapsible) {
             controlSetting.setClass("is-collapsible");
+            groupEl.addClass("is-collapsible");
+            if (isCollapsing) {
+                controlSetting.setClass("collapsed");
+                groupEl.addClass("collapsed");
+            }
         }
         this.makeDragable(groupEl, evt => {
             let oldIndex = evt.oldDraggableIndex,
-                newIndex = evt.newDraggableIndex,
-                colorConfigs = this.plugin.settings.colorConfigs;
+                newIndex = evt.newDraggableIndex;
             if (this.isHidden || oldIndex === undefined || newIndex === undefined || oldIndex == newIndex) { return }
-            colorConfigs.splice(
+            configs.splice(
                 Math.min(oldIndex, newIndex),
                 0,
-                ...colorConfigs.splice(Math.max(oldIndex, newIndex), 1)
+                ...configs.splice(Math.max(oldIndex, newIndex), 1)
             );
-            this.plugin.colorsHandler.moveRule(oldIndex, newIndex);
+            spec.onMove?.(this, oldIndex, newIndex);
         });
     }
-    setColorItem(config: ColorConfig, configs: ColorConfig[], containerEl: HTMLElement) {
-        if (/[^a-z0-9-]/i.test(config.tag)) { config.tag = config.tag.replaceAll(/[^a-z0-9-]/ig, "") }
-        let colorSetting = new Setting(containerEl)
+    setTagItem(spec: TagSettingsSpec, config: TagConfig, configs: TagConfig[], groupEl: HTMLElement) {
+        config.tag = config.tag.replaceAll(spec.tagFilter, "");
+        let tagSetting = new Setting(groupEl)
             .setClass("ems-setting-item")
-            .setClass("ems-highlight-color-config")
+            .setClass("ems-tag-config")
             .addExtraButton(btn => {
                 btn.extraSettingsEl.addClasses(["ems-button", "ems-button-drag-handle"]);
                 btn.setIcon("grip-vertical");
                 btn.setTooltip("Hold and drag to move", { placement: "left" });
             })
             .addText(text => {
-                text.setPlaceholder("Color name");
+                text.setPlaceholder(spec.nameFieldPlaceholder);
                 text.setValue(config.name);
                 text.inputEl.addClasses(["ems-field", "ems-field-name"]);
                 text.onChange(name => {
                     config.name = name;
-                    this.saveSettings({ internal: false, colors: false });
+                    this.saveSettings();
                 });
             })
             .addExtraButton(btn => {
@@ -174,38 +211,10 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 btn.onClick(() => {
                     let index = configs.findIndex(target => target == config);
                     configs.splice(index, 1);
-                    this.colorSettingItems.splice(index, 1);
-                    this.plugin.colorsHandler.removeSingle(index);
-                    this.removeSetting(colorSetting);
-                    this.saveSettings({ internal: false, colors: true });
-                });
-            })
-            .addExtraButton(btn => {
-                btn.extraSettingsEl.addClasses(["ems-button", "ems-button-shift-up"]);
-                btn.setIcon("arrow-up");
-                btn.setTooltip("Shift up");
-                btn.onClick(() => {
-                    let index = configs.findIndex(target => target == config);
-                    if (index) {
-                        moveElement(colorSetting.settingEl, -1)
-                        configs.splice(index - 1, 0, configs.splice(index, 1)[0]);
-                        this.plugin.colorsHandler.moveSingleRule(index, -1);
-                        this.saveSettings({ internal: false, colors: true });
-                    }
-                });
-            })
-            .addExtraButton(btn => {
-                btn.extraSettingsEl.addClasses(["ems-button", "ems-button-shift-down"]);
-                btn.setIcon("arrow-down");
-                btn.setTooltip("Shift down");
-                btn.onClick(() => {
-                    let index = configs.findIndex(target => target == config);
-                    if (index < configs.length - 1) {
-                        moveElement(colorSetting.settingEl, 1)
-                        configs.splice(index, 0, configs.splice(index + 1, 1)[0]);
-                        this.plugin.colorsHandler.moveSingleRule(index, 1);
-                        this.saveSettings({ internal: false, colors: true });
-                    }
+                    this.tagSettingItems[spec.type].splice(index, 1);
+                    this.removeSetting(tagSetting);
+                    this.saveSettings();
+                    spec.onDelete?.(this, index);
                 });
             })
             .addExtraButton(btn => {
@@ -215,35 +224,23 @@ export class ExtendedSettingTab extends PluginSettingTab {
                 btn.onClick(() => {
                     config.showInMenu = !config.showInMenu;
                     btn.setIcon(config.showInMenu ? "eye" : "eye-off");
-                    this.saveSettings({ internal: false, colors: false })
+                    this.saveSettings();
                 });
             })
             .addText(text => {
-                text.setPlaceholder("Tag string");
+                text.setPlaceholder(spec.tagFieldPlaceholder);
                 text.inputEl.addClasses(["ems-field", "ems-field-tag"]);
                 text.setValue(config.tag);
                 text.onChange(tag => {
-                    config.tag = tag.replaceAll(/[^a-z0-9-]/gi, "");
+                    let index = configs.findIndex(target => target == config);
+                    config.tag = tag.replaceAll(spec.tagFilter, "");
                     text.setValue(config.tag);
-                    let index = configs.findIndex(target => target == config),
-                        ruleStr = createCSSRuleFromColorConfig(config);
-                    this.plugin.colorsHandler.replace(ruleStr, index);
-                    this.saveSettings({ internal: false, colors: true });
-                });
-            })
-            .addColorPicker(picker => {
-                picker.setValue(config.color);
-                picker.colorPickerEl.addClasses(["ems-field", "ems-field-color-picker"]);
-                picker.onChange(color => {
-                    config.color = color;
-                    let index = configs.findIndex(target => target == config),
-                        ruleStr = createCSSRuleFromColorConfig(config);
-                    this.plugin.colorsHandler.replace(ruleStr, index);
-                    this.saveSettings({ internal: false, colors: true });
+                    this.saveSettings();
+                    spec.onTagChange?.(this, config, index);
                 });
             });
-        this.colorSettingItems.push(colorSetting);
-        return colorSetting;
+        spec.onAdd?.(this, tagSetting, config);
+        return tagSetting;
     }
     setToggleField(field: ToggleFieldDesc<PluginSettings>, setting: Setting) {
         setting.addToggle(toggle => {
@@ -320,7 +317,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
     makeDragable(groupEl: HTMLElement, onEnd: (evt: SortableEvent) => unknown) {
         Sortable.create(groupEl, {
             handle: ".ems-button-drag-handle",
-            animation: 200,
+            animation: 100,
             easing: "cubic-bezier(0.2, 0, 0, 1)",
             forceFallback: true,
             fallbackOnBody: true,

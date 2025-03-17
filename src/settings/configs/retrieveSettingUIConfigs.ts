@@ -1,4 +1,4 @@
-import { Field, Theme } from "src/enums";
+import { Field, Format, Theme } from "src/enums";
 import { PluginSettings, SettingRoot } from "src/types";
 import { ALWAYS_SHOW_DROPDOWN, DISPLAY_BEHAVIOUR_DROPDOWN, MARKDOWN_VIEW_MODE_DROPDOWN } from "src/settings/configs";
 
@@ -7,6 +7,9 @@ import { ALWAYS_SHOW_DROPDOWN, DISPLAY_BEHAVIOUR_DROPDOWN, MARKDOWN_VIEW_MODE_DR
  */
 export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<PluginSettings> {
     return [{
+        id: "syntax-switch",
+        heading: "Syntax switch",
+        collapsible: true,
         items: [{
             name: "Insertion (underline)",
             desc: "Use double plus (\"++\") as a delimiter.",
@@ -96,6 +99,33 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
             }]
         }]
     }, {
+        id: "formatting",
+        heading: "Formatting",
+        collapsible: true,
+        items: [{
+            name: "Make it tidier",
+            desc: "If turned on, formatting will run in refined way by detecting context the cursor or selection was placed within, " +
+                "e.g. you just place a cursor to specific word and run the command to format the whole word or vice-versa. " +
+                "If turned off, formatting is more like a normal auto-wrap toggle and doesn't care about the context.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "tidyFormatting",
+                spec: null
+            }]
+        }, {
+            name: "Open tag menu after formatting",
+            desc: "Will automatically open tag menu after doing formatting via command palattes or context menu. " +
+                "Only applied to the custom highlight, custom span, and fenced div.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "openTagMenuAfterFormat",
+                spec: null
+            }]
+        }]
+    }, {
+        id: "tag-display",
         heading: "Tag display behavior",
         collapsible: true,
         items: [{
@@ -157,6 +187,7 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
             }]
         }]
     }, {
+        id: "custom-highlight",
         heading: "Custom highlight",
         collapsible: true,
         items: [{
@@ -168,6 +199,33 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
                 key: "colorButton",
                 spec: null,
                 update: { internal: true }
+            }]
+        }, {
+            name: "Show accent option",
+            desc: "Show accent option in the color menu.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "showAccentColor",
+                spec: null
+            }]
+        }, {
+            name: "Show default option",
+            desc: "Show default option in the color menu. Default means non-tagged highlight.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "showDefaultColor",
+                spec: null
+            }]
+        }, {
+            name: "Show remove option",
+            desc: "Show remove option in the color menu.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "showRemoveColor",
+                spec: null
             }]
         }, {
             name: "Color opacity in light mode",
@@ -207,9 +265,66 @@ export function retrieveSettingUIConfigs(settings: PluginSettings): SettingRoot<
             name: "Color palettes",
             desc: "The first text field gives the name of the item in the color menu, " +
                 "and the second one sets the tag string to be used in highlight syntax.",
-            preservedForColorSettings: true
+            preservedForTagSettings: Format.HIGHLIGHT
         }]
     }, {
+        id: "custom-span",
+        heading: "Custom span",
+        collapsible: true,
+        items: [{
+            name: "Show default option",
+            desc: "Show default option in the tag menu. Default means non-tagged span.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "showDefaultSpanTag",
+                spec: null
+            }]
+        }, {
+            name: "Show remove option",
+            desc: "Show remove option in the tag menu.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "showRemoveSpanTag",
+                spec: null
+            }]
+        }, {
+            name: "Predefined tags",
+            desc: "Predefined tags to be displayed in the tag menu. The first field gives the name of the item, " +
+                "the second one sets the tag string to be used in custom span syntax.",
+            preservedForTagSettings: Format.CUSTOM_SPAN
+        }]
+    }, {
+        id: "fenced-div",
+        heading: "Fenced div",
+        collapsible: true,
+        items: [{
+            name: "Show default option",
+            desc: "Show default option in the tag menu. Default means non-tagged div.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "showDefaultDivTag",
+                spec: null
+            }]
+        }, {
+            name: "Show remove option",
+            desc: "Show remove option in the tag menu.",
+            fields: [{
+                type: Field.TOGGLE,
+                record: settings,
+                key: "showRemoveDivTag",
+                spec: null
+            }]
+        }, {
+            name: "Predefined tags",
+            desc: "Predefined tags to be displayed in the tag menu. The first field gives the name of the item, " +
+                "the second one sets the tag string to be used in fenced div syntax.",
+            preservedForTagSettings: Format.FENCED_DIV
+        }]
+    }, {
+        id: "others",
         heading: "Others",
         collapsible: true,
         items: [{

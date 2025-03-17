@@ -1,7 +1,7 @@
 import { MarkdownView, Plugin } from "obsidian";
 // import { drawSelection } from "@codemirror/view";
 import { PreviewExtendedSyntax } from "src/preview-mode/post-processor";
-import { ColorConfig, PluginSettings } from "src/types";
+import { ColorConfig, PluginSettings, TagConfig } from "src/types";
 import { DEFAULT_SETTINGS } from "src/settings";
 import { ExtendedSettingTab } from "src/settings/interface";
 import { pluginFacet, settingsFacet } from "src/editor-mode/facets";
@@ -90,9 +90,39 @@ export default class ExtendedMarkdownSyntax extends Plugin {
         this.settings.colorConfigs.push(newConfig);
         this.colorsHandler.insert(ruleStr, index);
     }
+    addTagConfig(type: Format) {
+        if (!supportTag(type)) { return }
+        if (type == Format.HIGHLIGHT) { this.addNewColor() }
+        else {
+            let configs = getTagConfigs(this.settings, type),
+                index = configs.length;
+            configs.push({
+                name: "Tag " + index,
+                tag: "tag-" + index,
+                showInMenu: true
+            });
+        }
+    }
     revertColorConfigs(callback?: (colorConfig: ColorConfig, colorConfigs: ColorConfig[]) => unknown) {
         let configs = this.settings.colorConfigs;
         configs.splice(0, configs.length, ...getDefaultColorConfigs());
         this.rebuildColorsStyleSheet(callback);
+    }
+    revertTagConfigs(type: Format, callback?: (config: TagConfig, configs: TagConfig[]) => unknown) {
+        if (!supportTag(type)) { return }
+        if (type == Format.HIGHLIGHT) {
+            this.revertColorConfigs(callback);
+        } else {
+            let configs = getTagConfigs(this.settings, type);
+            configs.splice(0);
+        }
+    }
+    registerCommands(commands: Command[]) {
+        commands.forEach(cmd => this.addCommand(cmd));
+    }
+    extendEditorCtxMenu() {
+        this.registerEvent(this.app.workspace.on("editor-menu", (menu, editor, ctx) => {
+            extendEditorCtxMenu(menu, editor, ctx);
+        }));
     }
 }

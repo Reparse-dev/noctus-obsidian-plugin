@@ -12,8 +12,6 @@ import { colorTag, customSpanTag, fencedDivTag } from "src/editor-mode/parser/to
 export class Parser {
     private state: ParserState;
     private queue: TokenQueue = new TokenQueue();
-    isInitializing: boolean;
-    isReparsing: boolean;
     inlineTokens: TokenGroup = [];
     blockTokens: TokenGroup = [];
     reparsedRanges: Record<TokenLevel, { from: number, initTo: number, changedTo: number }>;
@@ -41,16 +39,12 @@ export class Parser {
         this.blockTokens = [];
         this.defineState({ doc, tree, offset: 0, settings: this.settings });
         this.streamParse();
-        this.isInitializing = true;  
-        this.isReparsing = false;
         this.reparsedRanges = {
             [TokenLevel.INLINE]: { from: 0, initTo: 0, changedTo: this.inlineTokens.length },
             [TokenLevel.BLOCK]: { from: 0, initTo: 0, changedTo: this.blockTokens.length }
         }
     }
     applyChange(doc: Text, tree: Tree, oldTree: Tree, changes: ChangeSet) {
-        this.isReparsing = true;
-        this.isInitializing = false;
         let changedRange = composeChanges(changes),
             offset = Math.min(oldTree.length, tree.length) + 1;
         if (changedRange) {

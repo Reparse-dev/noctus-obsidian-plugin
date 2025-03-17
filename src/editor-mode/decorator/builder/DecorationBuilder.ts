@@ -12,6 +12,7 @@ import { trimTag } from "src/utils";
 import { SelectionObserver } from "src/editor-mode/observer";
 import { editorLivePreviewField } from "obsidian";
 import { refresherAnnot } from "src/editor-mode/annotations";
+import { activityFacet } from "src/editor-mode/facets";
 
 export class DecorationBuilder {
     readonly parser: Parser;
@@ -77,14 +78,13 @@ export class DecorationBuilder {
     onViewUpdate(update: ViewUpdate) {
         let state = update.state,
             view = update.view,
-            isLivePreview = state.field(editorLivePreviewField);
-        if (this.parser.isReparsing || this.parser.isInitializing || update.viewportMoved) {
+            isLivePreview = state.field(editorLivePreviewField),
+            activityRecorder = state.facet(activityFacet);
+        if (activityRecorder.verify("builder-view-update", "parse", true) || update.viewportMoved) {
             this.buildMain(view, state);
-            this.parser.isReparsing = this.parser.isInitializing = false;
         }
-        if (this.selectionObserver.isObserving || update.viewportMoved) {
+        if (activityRecorder.verify("builder-view-update", "observe", true) || update.viewportMoved) {
             this.buildSupplementary(isLivePreview);
-            this.selectionObserver.isObserving = false;
         }
     }
     /**
@@ -102,8 +102,9 @@ export class DecorationBuilder {
         let state = transaction.state,
             isLivePreview = state.field(editorLivePreviewField),
             isRefreshed = transaction.annotation(refresherAnnot),
-            isModeChanged = isEditorModeChanged(state, transaction.startState);
-        if (this.parser.isReparsing || this.parser.isInitializing) {
+            isModeChanged = isEditorModeChanged(state, transaction.startState),
+            activityRecorder = state.facet(activityFacet);
+        if (activityRecorder.verify("builder-state-update", "parse")) {
             this.replaceLineBreaks(transaction.newDoc, transaction.changes);
         }
         if (isModeChanged || isRefreshed) {
@@ -112,7 +113,7 @@ export class DecorationBuilder {
         }
         if (!isLivePreview) {
             this.removeOmitter();
-        } else if (this.selectionObserver.isObserving || isModeChanged) {
+        } else if (activityRecorder.verify("builder-state-update", "observe") || isModeChanged) {
             this.omitFencedDivOpening(transaction.changes);
         }
     }

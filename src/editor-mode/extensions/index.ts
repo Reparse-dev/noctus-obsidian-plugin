@@ -2,10 +2,12 @@ import { Extension, RangeSet } from "@codemirror/state";
 import { EditorView, ViewPlugin } from "@codemirror/view";
 import { builderField, decoSetField, parserField, selectionObserverField } from "src/editor-mode/state-fields";
 import { EditorPlugin } from "src/editor-mode/view-plugin";
+import { activityFacet } from "src/editor-mode/facets";
 
 export const editorPlugin = ViewPlugin.fromClass(EditorPlugin);
 
 export const editorExtendedSyntax: Extension = [
+    activityFacet.of(null),
     parserField,
     selectionObserverField,
     builderField,

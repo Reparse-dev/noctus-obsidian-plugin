@@ -91,13 +91,15 @@ export class Formatter {
      * 
      * **Exclusive to inline formatting use.**
      */
-    wrap() {
+    wrap(detectWord = true) {
         let { curRange, delimStr, tagStr } = this.state;
         // If the current selection is actually an empty cursor, attempt to use
         // word range if any.
         if (curRange.empty) {
             let cursorOffset = curRange.from;
-            curRange = this.view.state.wordAt(curRange.from) ?? curRange;
+            if (detectWord) {
+                curRange = this.view.state.wordAt(curRange.from) ?? curRange;
+            }
             if (cursorOffset == curRange.to) {
                 let shiftAmount = delimStr.length;
                 if (cursorOffset == curRange.from) {

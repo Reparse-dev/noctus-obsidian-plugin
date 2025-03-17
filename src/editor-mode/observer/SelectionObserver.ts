@@ -389,8 +389,13 @@ export class SelectionObserver {
         }
         return false;
     }
+    pickMaps(type: Format) {
+        let level = isInlineFormat(type) ? TokenLevel.INLINE : TokenLevel.BLOCK,
+            tokens = this.parser.getTokens(level);
+        return this.maps.map(maps => maps[level]?.filter(tokenIndex => tokens[tokenIndex].type == type));
+    }
     clearMaps() {
-        this.maps = [];
+        this.maps = new Array(this.selection.ranges.length).map(() => ({}));
     }
     checkSelectionIndexCache() {
         if (this.indexCaches.selection.number >= this.selection.ranges.length) {

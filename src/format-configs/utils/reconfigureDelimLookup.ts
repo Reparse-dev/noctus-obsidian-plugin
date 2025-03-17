@@ -1,6 +1,6 @@
 import { EditorDelimLookup } from "src/editor-mode/parser/configs";
 import { PreviewDelimLookup } from "src/preview-mode/configs";
-import { configureDelimLookup } from "src/utils";
+import { configureDelimLookup } from "src/format-configs/utils";
 import { PluginSettings } from "src/types";
 
 export function reconfigureDelimLookup(settings: PluginSettings) {

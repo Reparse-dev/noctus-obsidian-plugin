@@ -1,6 +1,6 @@
 import { trimTag } from "src/utils";
 import { FENCED_DIV } from "src/preview-mode/regexp";
-import { BlockRules } from "src/shared-configs";
+import { BlockRules } from "src/format-configs";
 import { Format, MarkdownViewMode } from "src/enums";
 import { PluginSettings } from "src/types";
 

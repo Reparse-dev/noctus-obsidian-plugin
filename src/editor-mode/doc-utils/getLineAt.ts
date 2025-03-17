@@ -1,7 +1,8 @@
 import { IndexCache } from "src/types";
 import { Text } from "@codemirror/state"
 
-export function getLineAt(doc: Text, offset: number, linePosCache: IndexCache) {
+export function getLineAt(doc: Text, offset: number, linePosCache?: IndexCache) {
+    if (!linePosCache) { return doc.lineAt(offset) }
     if (linePosCache.number > doc.lines) { linePosCache.number = doc.lines }
     let curLine = doc.line(linePosCache.number);
     if (offset < curLine.from) {

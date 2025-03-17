@@ -1,6 +1,6 @@
 import { SyntaxNode, Tree } from "@lezer/common";
 import { SEMANTIC_INTERFERER_RE } from "src/editor-mode/parser/regexps";
-import { findNode } from "src/editor-mode/parser/utils";
+import { findNode } from "src/editor-mode/parser/parser-utils";
 
 export function hasInterferer(tree: Tree, from: number, to: number) {
     let matcher = (node: SyntaxNode) => {

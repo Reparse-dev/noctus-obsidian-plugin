@@ -1,4 +1,4 @@
-import { Formats, InlineRules } from "src/shared-configs";
+import { Formats, InlineRules } from "src/format-configs";
 import { Format } from "src/enums";
 import { InlineFormat } from "src/types";
 import { SKIPPED_CLASSES, PreviewDelimLookup } from "src/preview-mode/configs";

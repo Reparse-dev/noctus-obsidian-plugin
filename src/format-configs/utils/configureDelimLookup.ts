@@ -1,5 +1,5 @@
 import { Format, MarkdownViewMode } from "src/enums";
-import { InlineRules } from "src/shared-configs";
+import { InlineRules } from "src/format-configs";
 import { PluginSettings } from "src/types";
 import { EditorDelimLookup } from "src/editor-mode/parser/configs";
 import { PreviewDelimLookup } from "src/preview-mode/configs";

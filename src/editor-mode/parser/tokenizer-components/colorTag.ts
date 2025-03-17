@@ -1,4 +1,4 @@
-import { isAlphanumeric } from "src/editor-mode/parser/utils";
+import { isAlphanumeric } from "src/editor-mode/parser/parser-utils";
 import { Token } from "src/types";
 import { ParserState } from "src/editor-mode/parser";
 

@@ -2,7 +2,7 @@ import { RangeSet, Range, Text, ChangeSet } from "@codemirror/state";
 import { Decoration } from "@codemirror/view";
 import { Parser } from "src/editor-mode/parser";
 import { IndexCache, RangeSetUpdate, TokenGroup } from "src/types";
-import { getLineAt, iterLine } from "src/editor-mode/decorator/utils";
+import { getLineAt, iterLine } from "src/editor-mode/doc-utils";
 import { LineBreak } from "src/editor-mode/decorator/widgets";
 import { TokenLevel, TokenStatus } from "src/enums";
 

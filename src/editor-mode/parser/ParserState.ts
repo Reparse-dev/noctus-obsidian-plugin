@@ -3,9 +3,10 @@ import { Tree, TreeCursor } from "@lezer/common";
 import { PluginSettings, StateConfig, TokenGroup } from "src/types";
 import { TokenQueue } from "src/editor-mode/parser";
 import { Format, LineCtx } from "src/enums";
-import { Formats } from "src/shared-configs";
+import { Formats } from "src/format-configs";
 import { SKIPPED_NODE_RE } from "src/editor-mode/parser/regexps";
-import { findNode, getContextFromNode, isBlankLine } from "src/editor-mode/parser/utils";
+import { findNode, getContextFromNode } from "src/editor-mode/parser/parser-utils";
+import { isBlankLine } from "src/editor-mode/doc-utils";
 
 export class ParserState {
     doc: Text;
@@ -108,8 +109,8 @@ export class ParserState {
         }
         this.line = this.doc.line(this.linePos + 1);
         this.offset = 0;
-        this.resolveContext();
         this.blkStart = false;
+        this.resolveContext();
         if (skipBlankLine) {
             this.trySkipBlankLine();
         }

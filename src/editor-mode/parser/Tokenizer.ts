@@ -1,7 +1,7 @@
 import { Format, TokenLevel, Delimiter, TokenStatus } from "src/enums";
 import { ParserState } from "src/editor-mode/parser";
 import { BlockFormat, InlineFormat, Token } from "src/types";
-import { handleClosingDelim, retrieveDelimSpec, validateDelim } from "src/editor-mode/parser/utils";
+import { handleClosingDelim, retrieveDelimSpec, validateDelim } from "src/editor-mode/parser/parser-utils";
 import { colorTag, customSpanTag, fencedDivTag } from "src/editor-mode/parser/tokenizer-components";
 
 /**

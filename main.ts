@@ -5,7 +5,8 @@ import { ColorConfig, PluginSettings, TagConfig } from "src/types";
 import { DEFAULT_SETTINGS } from "src/settings";
 import { ExtendedSettingTab } from "src/settings/interface";
 import { pluginFacet, settingsFacet } from "src/editor-mode/facets";
-import { configureDelimLookup, deepCopy, reconfigureDelimLookup } from "src/utils";
+import { deepCopy } from "src/utils";
+import { configureDelimLookup, reconfigureDelimLookup, supportTag } from "src/format-configs/utils"
 import { appFacet } from "src/editor-mode/facets";
 import { editorExtendedSyntax } from "src/editor-mode/extensions";
 import { refresherAnnot } from "src/editor-mode/annotations";
@@ -70,7 +71,7 @@ export default class ExtendedMarkdownSyntax extends Plugin {
     buildColorsStyleSheet(callback?: (colorConfig: ColorConfig, colorConfigs: ColorConfig[]) => unknown) {
         let colorConfigs = this.settings.colorConfigs;
         for (let i = 0; i < colorConfigs.length; i++) {
-            let ruleStr = createCSSRuleFromColorConfig(colorConfigs[i]);
+            let ruleStr = convertColorConfigToCSSRule(colorConfigs[i]);
             this.colorsHandler.insert(ruleStr);
             if (callback) { callback(colorConfigs[i], colorConfigs) }
         }
@@ -91,7 +92,7 @@ export default class ExtendedMarkdownSyntax extends Plugin {
     addNewColor() {
         let index = this.settings.colorConfigs.length,
             newConfig = createColorConfig("color-" + index, "#ffd000", "Color " + index),
-            ruleStr = createCSSRuleFromColorConfig(newConfig);
+            ruleStr = convertColorConfigToCSSRule(newConfig);
         this.settings.colorConfigs.push(newConfig);
         this.colorsHandler.insert(ruleStr, index);
     }

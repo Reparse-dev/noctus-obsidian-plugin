@@ -1,4 +1,4 @@
-import { InlineRules } from "src/shared-configs";
+import { InlineRules } from "src/format-configs";
 import { COLOR_TAG_RE } from "src/preview-mode/regexp";
 import { Format } from "src/enums";
 import { PluginSettings } from "src/types";

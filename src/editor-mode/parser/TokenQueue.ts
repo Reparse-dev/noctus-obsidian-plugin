@@ -1,7 +1,7 @@
 import { Format, TokenLevel, TokenStatus } from "src/enums";
 import { InlineFormat, Token } from "src/types";
 import { ParserState } from "src/editor-mode/parser";
-import { Formats, InlineRules } from "src/shared-configs";
+import { Formats, InlineRules } from "src/format-configs";
 
 /**
  * A place storing token based on its type, to be resolved through

@@ -1,6 +1,6 @@
 import { Token } from "src/types";
 import { ParserState } from "src/editor-mode/parser";
-import { isAlphanumeric } from "src/editor-mode/parser/utils";
+import { isAlphanumeric } from "src/editor-mode/parser/parser-utils";
 
 export function customSpanTag(state: ParserState, token: Token) {
     let offset = state.offset,

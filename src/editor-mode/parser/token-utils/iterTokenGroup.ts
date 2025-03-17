@@ -1,5 +1,5 @@
 import { IterTokenGroupSpec } from "src/types";
-import { moveTokenIndexCache } from "src/editor-mode/decorator/utils";
+import { moveTokenIndexCache } from "src/editor-mode/parser/token-utils";
 
 export function iterTokenGroup(spec: IterTokenGroupSpec) {
     let { tokens, ranges, callback, indexCache } = spec;

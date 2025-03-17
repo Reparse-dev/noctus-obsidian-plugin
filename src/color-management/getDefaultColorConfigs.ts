@@ -1,13 +1,11 @@
 import { ColorConfig } from "src/types";
-import { takeBuiltinColor } from "src/color-management";
+import { takeBuiltinColor, PREDEFINED_COLOR_TAGS } from "src/color-management";
 
 export function getDefaultColorConfigs() {
-    let configs: ColorConfig[] = [],
-        predefinedTags = ["red", "orange", "yellow", "green", "cyan", "blue", "purple", "pink"],
-        predefinedNames = ["Red", "Orange", "Yellow", "Green", "Cyan", "Blue", "Purple", "Pink"];
-    for (let i = 0; i < predefinedTags.length; i++) {
-        let tag = predefinedTags[i],
-            name = predefinedNames[i],
+    let configs: ColorConfig[] = [];
+    for (let i = 0; i < PREDEFINED_COLOR_TAGS.length; i++) {
+        let tag = PREDEFINED_COLOR_TAGS[i],
+            name = tag[0].toUpperCase() + tag.slice(1),
             color = takeBuiltinColor(tag) ?? "#ffffff";
         configs.push({ tag, name, color, showInMenu: true });
     }

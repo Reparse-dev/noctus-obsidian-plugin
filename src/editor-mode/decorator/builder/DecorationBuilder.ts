@@ -5,9 +5,12 @@ import { Format, MarkdownViewMode, TokenStatus } from "src/enums";
 import { REVEALED_SPOILER_DECO } from "src/editor-mode/decorator/decorations";
 import { BlockFormat, PlainRange, InlineFormat, Token, TokenGroup, TokenDecoration, PluginSettings } from "src/types";
 import { ColorButton } from "src/editor-mode/decorator/widgets";
-import { BlockRules, InlineRules } from "src/shared-configs";
+import { BlockRules, InlineRules } from "src/format-configs";
 import { DecorationHolder, DelimOmitter, LineBreakReplacer, TokensCatcher } from "src/editor-mode/decorator/builder";
-import { createInlineDecoRange, createLineDecoRange, getLineAt, getTagRange, isEditorModeChanged, iterLine, iterTokenGroup, sliceStrFromLine } from "src/editor-mode/decorator/utils";
+import { createInlineDecoRange, createLineDecoRange } from "src/editor-mode/decorator/decorator-utils";
+import { isEditorModeChanged } from "src/editor-mode/editor-utils";
+import { getLineAt, iterLine, sliceStrFromLine } from "src/editor-mode/doc-utils";
+import { getTagRange, iterTokenGroup } from "src/editor-mode/parser/token-utils"
 import { trimTag } from "src/utils";
 import { SelectionObserver } from "src/editor-mode/observer";
 import { editorLivePreviewField } from "obsidian";

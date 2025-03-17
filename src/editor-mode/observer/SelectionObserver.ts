@@ -1,8 +1,9 @@
-import { TokenLevel } from "src/enums";
+import { Format, TokenLevel } from "src/enums";
 import { IndexCache, PlainRange, Region, Token, TokenGroup } from "src/types";
 import { Parser } from "src/editor-mode/parser";
 import { EditorSelection } from "@codemirror/state";
-import { joinRegions } from "src/editor-mode/observer/utils";
+import { joinRegions } from "src/editor-mode/range-utils";
+import { isInlineFormat } from "src/format-configs/utils";
 
 /**
  * Appliance for managing selection-based decorations that are tied to
@@ -21,9 +22,15 @@ export class SelectionObserver {
         [TokenLevel.INLINE]: [],
         [TokenLevel.BLOCK]: []
     };
+    /**
+     * Mapped indexes of tokens to each index of corresponding selection that
+     * is touched by them. For example, `maps[0]` contains all indexes of
+     * tokens that touched the first selection. May be empty if corresponding
+     * selection wasn't touched by any token.
+     */
     maps: Partial<Record<TokenLevel, number[]>>[] = [];
     /**
-     * All selection-based decorations, eg. omitted delimiters, that are
+     * All selection-based decorations, e.g. omitted delimiters, that are
      * associated with these tokens should be redrawn.
      */
     changedRegions: Record<TokenLevel, Region> = {

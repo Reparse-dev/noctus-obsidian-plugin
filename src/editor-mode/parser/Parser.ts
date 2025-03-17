@@ -3,11 +3,13 @@ import { ParserState, TokenQueue } from "src/editor-mode/parser";
 import { ChangeSet, Line, Text } from "@codemirror/state";
 import { Format, MarkdownViewMode, TokenLevel } from "src/enums";
 import { Tokenizer } from "src/editor-mode/parser";
-import { Formats } from "src/shared-configs";
+import { Formats } from "src/format-configs";
 import { Tree } from "@lezer/common";
-import { composeChanges, disableEscape, findShifterAt, getBlockEndAt, getShifterStart, hasInterferer, provideTokenRanges, reenableEscape } from "src/editor-mode/parser/utils";
+import { composeChanges, disableEscape, findShifterAt, getShifterStart, hasInterferer, reenableEscape } from "src/editor-mode/parser/parser-utils";
+import { provideTokenRanges } from "src/editor-mode/parser/token-utils"
 import { EditorDelimLookup } from "src/editor-mode/parser/configs";
 import { colorTag, customSpanTag, fencedDivTag } from "src/editor-mode/parser/tokenizer-components";
+import { getBlockEndAt } from "src/editor-mode/doc-utils"
 
 export class Parser {
     private state: ParserState;

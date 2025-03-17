@@ -1,5 +1,5 @@
 import { Format } from "src/enums";
-import { BlockRules, InlineRules } from "src/shared-configs";
+import { BlockRules, InlineRules } from "src/format-configs";
 import { BlockFormat, InlineFormat } from "src/types";
 
 export const Formats = {

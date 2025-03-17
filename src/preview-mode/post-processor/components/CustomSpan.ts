@@ -1,6 +1,6 @@
 import { Format } from "src/enums";
 import { CUSTOM_SPAN_TAG_RE } from "src/preview-mode/regexp";
-import { InlineRules } from "src/shared-configs";
+import { InlineRules } from "src/format-configs";
 import { PluginSettings } from "src/types";
 import { trimTag } from "src/utils";
 

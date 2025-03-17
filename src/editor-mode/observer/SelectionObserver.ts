@@ -324,10 +324,7 @@ export class SelectionObserver {
     iterateSelectedRegion(level: TokenLevel, watchPos: boolean, callback?: (token: Token, index: number, tokens: TokenGroup, pos: undefined | "covered" | "intersect" | "covering" | "adjacent") => void | boolean) {
         let tokens = this.parser.getTokens(level),
             selectionRanges = this.selection.ranges,
-            selectedRegion = this.selectedRegions[level],
-            // Cache of previous indexed token and amount of selection(s) are
-            // touched by it.
-            prevIndexedToken: undefined | { token: Token, selections: number };
+            selectedRegion = this.selectedRegions[level];
         // i => selected range index
         // j => selection range index
         // k => token index
@@ -336,17 +333,13 @@ export class SelectionObserver {
             for (let k = selectedRange.from; k < selectedRange.to; k++) {
                 let token = tokens[k],
                     pos: "covered" | "intersect" | "adjacent" | "covering" | undefined;
-                // Withdraw selection range index and reduce it by previous amount of
-                // selections being touched by previous token, if the current token was
-                // placed under or intersect with that token. Probably it shares the same
-                // selection.
-                if (prevIndexedToken) {
-                    let prevToken = prevIndexedToken.token;
-                    if (prevToken.from <= token.to && prevToken.to >= token.from) {
-                        j -= prevIndexedToken.selections;
-                    }
+                // Withdraw selection range index and reassign it by the first selection
+                // index that touched current token, if the current token shared the same
+                // selection with the previous one.
+                for (let prevIndex = j - 1; prevIndex >= 0; prevIndex--) {
+                    if (selectionRanges[prevIndex].to < token.from) { break }
+                    if (selectionRanges[prevIndex].from <= token.to) { j = prevIndex }
                 }
-                prevIndexedToken = { token, selections: 0 };
                 // There is no token that isn't touched by any selection at least.
                 while (token.to < selectionRanges[j].from) { j++ }
                 // A single token could be touched by more than one selection.
@@ -365,7 +358,6 @@ export class SelectionObserver {
                         }
                     }
                     j++;
-                    prevIndexedToken.selections++;
                 }
                 // If callback returned false, cut the iteration off.
                 if (callback?.(token, k, tokens, pos) === false) { return };

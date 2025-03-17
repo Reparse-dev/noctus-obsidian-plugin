@@ -1,1 +1,1 @@
-export * from "./ColorMenu";
+export * from "./TagMenu";

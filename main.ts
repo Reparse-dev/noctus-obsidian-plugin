@@ -1,4 +1,4 @@
-import { MarkdownView, Plugin } from "obsidian";
+import { MarkdownView, Plugin, Command } from "obsidian";
 // import { drawSelection } from "@codemirror/view";
 import { PreviewExtendedSyntax } from "src/preview-mode/post-processor";
 import { ColorConfig, PluginSettings, TagConfig } from "src/types";
@@ -10,8 +10,11 @@ import { appFacet } from "src/editor-mode/facets";
 import { editorExtendedSyntax } from "src/editor-mode/extensions";
 import { refresherAnnot } from "src/editor-mode/annotations";
 import { StyleSheetHandler } from "src/stylesheet-handler";
-import { createColorConfig, createCSSRuleFromColorConfig, getDefaultColorConfigs } from "src/color-management";
-import { Theme } from "src/enums";
+import { createColorConfig, convertColorConfigToCSSRule, getDefaultColorConfigs } from "src/color-management";
+import { Format, Theme } from "src/enums";
+import { editorCommands } from "src/editor-mode/commands";
+import { extendEditorCtxMenu } from "src/editor-mode/ui-components/utils";
+import { getTagConfigs } from "src/settings/configs";
 
 export default class ExtendedMarkdownSyntax extends Plugin {
     settings: PluginSettings;
@@ -33,6 +36,8 @@ export default class ExtendedMarkdownSyntax extends Plugin {
         this.buildColorsStyleSheet();
         this.opacityHandler.insert(`body.theme-light{--hl-opacity:${this.settings.lightModeHlOpacity}}`);
         this.opacityHandler.insert(`body.theme-dark{--hl-opacity:${this.settings.darkModeHlOpacity}}`);
+        this.registerCommands(editorCommands);
+        this.extendEditorCtxMenu();
         console.log("Load Extended Markdown Syntax");
     }
     async loadSettings() {

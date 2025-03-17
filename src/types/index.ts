@@ -1,9 +1,11 @@
 import type { SyntaxNode, Tree } from "@lezer/common";
 import type { Format, MarkdownViewMode, TokenLevel, Delimiter, TokenStatus, Field, DisplayBehaviour } from "src/enums";
-import { Line, RangeSet, RangeValue, Text, Range } from "@codemirror/state"
+import { Line, RangeSet, RangeValue, Text, Range, SelectionRange, EditorState } from "@codemirror/state"
 import { Decoration, DecorationSet } from "@codemirror/view";
-import { ColorComponent, DropdownComponent, ExtraButtonComponent, IconName, SliderComponent, TextAreaComponent, TextComponent, ToggleComponent } from "obsidian";
+import { ColorComponent, Command, DropdownComponent, Editor, ExtraButtonComponent, IconName, MarkdownFileInfo, MarkdownView, Setting, SliderComponent, TextAreaComponent, TextComponent, ToggleComponent } from "obsidian";
 import ExtendedMarkdownSyntax from "main";
+import { TagMenu } from "src/editor-mode/ui-components";
+import { ExtendedSettingTab } from "src/settings/interface";
 
 /** Token interface */
 export type Token = {
@@ -113,7 +115,14 @@ export type ColorConfig = {
     showInMenu: boolean
 };
 
+export type TagConfig = {
+    tag: string, 
+    name: string,
+    showInMenu: boolean
+};
+
 export type PluginSettings = {
+    // General
     insertion: MarkdownViewMode;
     spoiler: MarkdownViewMode;
     superscript: MarkdownViewMode;
@@ -121,17 +130,40 @@ export type PluginSettings = {
     customHighlight: MarkdownViewMode;
     customSpan: MarkdownViewMode;
     fencedDiv: MarkdownViewMode;
-    editorEscape: boolean;
-    colorButton: boolean;
-    decoratePDF: boolean;
-    colorConfigs: ColorConfig[];
-    lightModeHlOpacity: number;
-    darkModeHlOpacity: number;
+    
+    // Tag behavior
     hlTagDisplayBehaviour: DisplayBehaviour;
     spanTagDisplayBehaviour: DisplayBehaviour;
     showHlTagInPreviewMode: boolean;
     showSpanTagInPreviewMode: boolean;
     alwaysShowFencedDivTag: MarkdownViewMode;
+    
+    // Formatting
+    tidyFormatting: boolean;
+    openTagMenuAfterFormat: boolean;
+
+    // Custom highlight
+    colorButton: boolean;
+    showAccentColor: boolean;
+    showDefaultColor: boolean;
+    showRemoveColor: boolean;
+    lightModeHlOpacity: number;
+    darkModeHlOpacity: number;
+    colorConfigs: ColorConfig[];
+    
+    // Custom span
+    showDefaultSpanTag: boolean;
+    showRemoveSpanTag: boolean;
+    predefinedSpanTag: TagConfig[];
+
+    // Fenced div
+    showDefaultDivTag: boolean;
+    showRemoveDivTag: boolean;
+    predefinedDivTag: TagConfig[];
+
+    // Others
+    editorEscape: boolean;
+    decoratePDF: boolean;
 }
 
 export type PlainRange = { from: number, to: number };
@@ -220,8 +252,8 @@ export type FieldSpecRecord<TValue> = {
     [Field.MULTI_TOGGLE]: { options: Options<TValue, { icon: IconName, tooltip?: string }> },
     [Field.DROPDOWN]: { options: Options<TValue> },
     [Field.COLOR]: null,
-    [Field.TEXT]: { placeholder?: string },
-    [Field.TEXT_AREA]: { placeholder?: string, resizeable?: boolean }
+    [Field.TEXT]: { placeholder?: string, filter?: RegExp },
+    [Field.TEXT_AREA]: { placeholder?: string, filter?: RegExp, resizable?: boolean }
     [Field.SLIDER]: { min: number, max: number, step: number }
 };
 
@@ -265,14 +297,49 @@ export type SettingItem<TRecord> = {
     name: string,
     desc?: string,
     fields?: FieldGroup<TRecord>,
-    preservedForColorSettings?: boolean
+    preservedForTagSettings?: Format.HIGHLIGHT | Format.CUSTOM_SPAN | Format.FENCED_DIV
 };
 
 export type SettingGroup<TRecord> = {
     heading?: string,
     desc?: string,
     collapsible?: boolean,
+    id: string,
     items: SettingItem<TRecord>[]
 };
 
 export type SettingRoot<TRecord> = SettingGroup<TRecord>[];
+
+export type TagSettingsSpec = {
+    type: Format.HIGHLIGHT | Format.CUSTOM_SPAN | Format.FENCED_DIV;
+    addBtnPlaceholder: string;
+    nameFieldPlaceholder: string;
+    tagFieldPlaceholder: string;
+    tagFilter: RegExp;
+    onAdd?: (settingTab: ExtendedSettingTab, tagSettingItem: Setting, newConfig: TagConfig) => unknown;
+    onMove?: (settingTab: ExtendedSettingTab, oldIndex: number, newIndex: number) => unknown;
+    onResetted?: (settingTab: ExtendedSettingTab) => unknown;
+    onDelete?: (settingTab: ExtendedSettingTab, deletedIndex: number) => unknown;
+    onTagChange?: (settingTab: ExtendedSettingTab, changedConfig: TagConfig, index: number) => unknown;
+}
+
+export type FormattingSpec = {
+    range: SelectionRange,
+    type: Format,
+    state: EditorState,
+    tokenIndexMap: number[],
+    tokens: TokenGroup,
+    remadeTokenIndexes: Partial<Record<number, boolean>>,
+    preventMenu?: boolean,
+    precise?: boolean
+};
+
+export interface CtxMenuCommand extends Command {
+    icon: string;
+    ctxMenuTitle: string;
+    editorCallback: (editor: Editor, ctx: MarkdownView | MarkdownFileInfo) => unknown;
+    [data: string]: unknown;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ITagMenu extends TagMenu {};

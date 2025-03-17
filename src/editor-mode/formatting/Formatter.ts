@@ -234,8 +234,9 @@ export class Formatter {
             this.state.pushChange({ from: curRange.to, insert: delimStr });
         }
     }
+    /** Run only when tidier formatting is switched off. */
     toggleDelim() {
-        let { curRange, delimStr } = this.state,
+        let { curRange, delimStr, tagStr } = this.state,
             delimLen = delimStr.length,
             selectedStrWithOverlappedEdge = this.doc.sliceString(curRange.from - delimLen, curRange.to + delimLen),
             selectedStr = selectedStrWithOverlappedEdge.slice(delimLen, -delimLen);
@@ -250,7 +251,10 @@ export class Formatter {
                 { from: curRange.to, to: curRange.to + delimLen }
             ]);
         } else {
-            this.wrap();
+            this.state.pushChange([
+                { from: curRange.from, insert: delimStr + (tagStr ?? "") },
+                { from: curRange.to, insert: delimStr }
+            ]);
         }
     }
     addBlockTag(block: { start: number, end: number }) {

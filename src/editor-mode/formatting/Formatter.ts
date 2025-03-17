@@ -65,7 +65,7 @@ export class Formatter {
             let { curTokenMap, curRange, tagStr, precise } = state,
                 firstToken = curTokenMap ? tokens[curTokenMap[0]] : null;
             if (!precise) {
-                this.toggleDelim();
+                this.toggleInlineDelim();
             } else if (!firstToken) {
                 this.wrap();
             } else if (firstToken.from > curRange.from || firstToken.to < curRange.to) {
@@ -237,7 +237,7 @@ export class Formatter {
         }
     }
     /** Run only when tidier formatting is switched off. */
-    toggleDelim() {
+    toggleInlineDelim() {
         let { curRange, delimStr, tagStr } = this.state,
             delimLen = delimStr.length,
             selectedStrWithOverlappedEdge = this.doc.sliceString(curRange.from - delimLen, curRange.to + delimLen),

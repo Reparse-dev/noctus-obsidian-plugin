@@ -55,10 +55,11 @@ export class SelectionObserver {
         this.parser = parser;
     }
     /**
-     * All the methods below should be run inside this. Don't try to run
-     * them separately.
+     * Observe given selection to catch tokens that touched it, then map the
+     * old selected region with the new one, producing latest changed region
+     * that can be used to produce RangeSet filter.
      */
-    startObserve(selection: EditorSelection, isParsing: boolean): void {
+    observe(selection: EditorSelection, isParsing: boolean, restart = false): void {
         this.selection = selection;
         this.checkIndexCache();
         this.isObserving = true;
@@ -68,20 +69,20 @@ export class SelectionObserver {
             // At the moment, changed and filter region are only applied to block-
             // level tokens.
             if (level == TokenLevel.INLINE) { continue }
-            this.mapChangedRegion(level, oldSelectedRegion, isParsing);
+            this.mapChangedRegion(level, oldSelectedRegion, isParsing, restart);
             this.createFilter(level);
         }
     }
+    /**
+     * Restart the observer to its initial state, i.e. clear old selected
+     * region and reobserve given selection.
+     */
     restartObserver(selection: EditorSelection, isParsing: boolean): void {
-        this.selection = selection;
-        this.checkIndexCache();
-        this.isObserving = true;
-        for (let level = TokenLevel.BLOCK as TokenLevel; level <= TokenLevel.INLINE; level++) {
-            let oldSelectedRegion: Region = [];
-            this.locateSelectedTokens(level);
-            this.mapChangedRegion(level, oldSelectedRegion, isParsing, true);
-            this.createFilter(level);
-        }
+        this.selectedRegions = {
+            [TokenLevel.BLOCK]: [],
+            [TokenLevel.INLINE]: []
+        };
+        this.observe(selection, isParsing, true);
     }
     /**
      * Generate region of the tokens that touch or intersect the cursor or

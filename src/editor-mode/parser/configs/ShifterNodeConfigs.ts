@@ -20,7 +20,9 @@ export const ShifterNodeConfigs: Record<string, { query: string, getOpen: (node:
         query: "math",
         getOpen(node) {
             while (!node.name.includes("math-begin")) {
-                node = node.prevSibling!;
+                let prevSibling = node.prevSibling ?? node.parent?.prevSibling?.lastChild ?? null;
+                if (!prevSibling) { return null }
+                node = prevSibling;
             }
             if (node.to - node.from != 1) { return null }
             else { return node }

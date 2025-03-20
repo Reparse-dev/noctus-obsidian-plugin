@@ -41,7 +41,6 @@ export class ExtendedSettingTab extends PluginSettingTab {
     display(): void {
         let { containerEl } = this,
             { settings } = this.plugin;
-        containerEl.empty();
         let settingsUIConfig = retrieveSettingUIConfigs(settings);
         this.drawFromConfig(settingsUIConfig, containerEl);
         this.isHidden = false;
@@ -56,6 +55,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
         this.refreshInternal = this.rebuildColorStyleRules = false;
         this.emptyTagSettingItems();
         this.isHidden = true;
+        this.containerEl.empty();
         super.hide();
     }
     emptyTagSettingItems() {

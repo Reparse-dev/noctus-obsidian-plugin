@@ -6,7 +6,7 @@ import { REVEALED_SPOILER_DECO } from "src/editor-mode/decorator/decorations";
 import { BlockFormat, PlainRange, InlineFormat, Token, TokenGroup, TokenDecoration, PluginSettings } from "src/types";
 import { ColorButton } from "src/editor-mode/decorator/widgets";
 import { BlockRules, InlineRules } from "src/format-configs";
-import { DecorationHolder, DelimOmitter, LineBreakReplacer, TokensCatcher } from "src/editor-mode/decorator/builder";
+import { DecorationHolder, DelimOmitter, LineBreakReplacer, TokensBuffer } from "src/editor-mode/decorator/builder";
 import { createInlineDecoRange, createLineDecoRange } from "src/editor-mode/decorator/decorator-utils";
 import { isEditorModeChanged } from "src/editor-mode/editor-utils";
 import { getLineAt, iterLine, sliceStrFromLine } from "src/editor-mode/doc-utils";
@@ -20,7 +20,7 @@ import { activityFacet } from "src/editor-mode/facets";
 export class DecorationBuilder {
     readonly parser: Parser;
     readonly omitter: DelimOmitter;
-    readonly catcher: TokensCatcher;
+    readonly catcher: TokensBuffer;
     readonly lineBreakReplacer: LineBreakReplacer;
     readonly selectionObserver: SelectionObserver;
     readonly holder: DecorationHolder;
@@ -35,7 +35,7 @@ export class DecorationBuilder {
         this.selectionObserver = selectionObserver;
         this.settings = parser.settings;
         this.omitter = new DelimOmitter(this.settings, selectionObserver);
-        this.catcher = new TokensCatcher();
+        this.catcher = new TokensBuffer();
         this.lineBreakReplacer = new LineBreakReplacer(parser);
         this.holder = new DecorationHolder();
     }

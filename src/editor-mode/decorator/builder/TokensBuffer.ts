@@ -1,6 +1,6 @@
 import { TokenGroup } from "src/types";
 
-export class TokensCatcher {
+export class TokensBuffer {
     activeTokens: TokenGroup = [];
     hlTokens: TokenGroup = [];
     spoilerTokens: TokenGroup = [];

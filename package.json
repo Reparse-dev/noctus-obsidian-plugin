@@ -10,7 +10,7 @@
 	},
 	"keywords": [],
 	"author": "kotaindah55",
-	"license": "GPL-3.0-only",
+	"license": "MIT",
 	"dependencies": {
 		"@codemirror/language": "^6.11.0",
 		"@codemirror/search": "^6.5.10",

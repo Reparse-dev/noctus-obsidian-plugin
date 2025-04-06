@@ -1,5 +1,5 @@
 export enum DisplayBehaviour {
-    ALWAYS,
-    TAG_TOUCHED,
-    SYNTAX_TOUCHED
+	ALWAYS,
+	TAG_TOUCHED,
+	SYNTAX_TOUCHED
 }

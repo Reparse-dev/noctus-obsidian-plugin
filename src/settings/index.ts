@@ -1,1 +1,0 @@
-export * from "./configs/DEFAULT_SETTINGS";

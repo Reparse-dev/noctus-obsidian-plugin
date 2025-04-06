@@ -1,4 +1,4 @@
 export enum TokenLevel {
-    BLOCK,
-    INLINE
+	BLOCK,
+	INLINE
 }

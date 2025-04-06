@@ -1,7 +1,7 @@
 /** Delimiter position. */
 export enum Delimiter {
-    /** Opening delimiter */
-    OPEN,
-    /** Closing delimiter */
-    CLOSE
+	/** Opening delimiter */
+	OPEN,
+	/** Closing delimiter */
+	CLOSE
 }

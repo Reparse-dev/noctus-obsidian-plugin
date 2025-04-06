@@ -1,9 +1,9 @@
 export enum Field {
-    TOGGLE,
-    MULTI_TOGGLE,
-    DROPDOWN,
-    COLOR,
-    TEXT,
-    TEXT_AREA,
-    SLIDER
+	TOGGLE,
+	MULTI_TOGGLE,
+	DROPDOWN,
+	COLOR,
+	TEXT,
+	TEXT_AREA,
+	SLIDER
 }

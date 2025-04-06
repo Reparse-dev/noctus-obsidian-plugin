@@ -1,1 +1,0 @@
-export const PREDEFINED_COLOR_TAGS = ["red", "orange", "yellow", "green", "cyan", "blue", "purple", "pink"] as const;

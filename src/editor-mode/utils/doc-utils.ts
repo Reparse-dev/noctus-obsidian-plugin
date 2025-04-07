@@ -24,28 +24,29 @@ export class TextCursor {
 	}
 
 	public next(): boolean {
-		for (let i = this.address.length - 1; i >= 0; i--) {
-			let { parent, index } = this.address[i],
+		for (let deep = this.address.length - 1; deep >= 0; deep--) {
+			let { parent, index } = this.address[deep],
 				branches = _isTextLeaf(parent) ? parent.text : parent.children;
 			if (index + 1 < branches.length) {
-				this.address[i].index++;
-				while (i < this.address.length) {
-					let { parent, index } = this.address[i++];
-					if (_isTextLeaf(parent)) {
-						let length = parent.text[index].length,
-							from = this.curLine.to + 1;
-						this.curLine = {
-							number: this.curLine.number + 1,
-							text: parent.text[index],
-							from,
-							to: from + length,
-							length
-						};
-					} else {
-						this.address[i].parent = parent.children[index] as TextNode | TextLeaf;
-						this.address[i].index = 0;
+				this.address[deep].index++;
+				while (++deep < this.address.length) {
+					let { parent, index } = this.address[deep - 1];
+					if (_isTextNode(parent)) {
+						this.address[deep].parent = parent.children[index] as TextNode | TextLeaf;
+						this.address[deep].index = 0;
 					}
 				}
+				let { parent, index } = this.address[this.address.length - 1];
+				if (!_isTextLeaf(parent)) throw TypeError("TextLeaf not found!");
+				let length = parent.text[index].length,
+					from = this.curLine.to + 1;
+				this.curLine = {
+					number: this.curLine.number + 1,
+					text: parent.text[index],
+					from,
+					to: from + length,
+					length
+				};
 				return true;
 			}
 		}
@@ -53,27 +54,28 @@ export class TextCursor {
 	}
 
 	public prev(): boolean {
-		for (let i = this.address.length - 1; i >= 0; i--) {
-			if (this.address[i].index > 0) {
-				this.address[i].index--;
-				while (i < this.address.length) {
-					let { parent, index } = this.address[i++];
-					if (_isTextLeaf(parent)) {
-						let length = parent.text[index].length,
-							to = this.curLine.from - 1;
-						this.curLine = {
-							number: this.curLine.number - 1,
-							text: parent.text[index],
-							from: to - length,
-							to,
-							length
-						};
-					} else {
+		for (let deep = this.address.length - 1; deep >= 0; deep--) {
+			if (this.address[deep].index > 0) {
+				this.address[deep].index--;
+				while (++deep < this.address.length) {
+					let { parent, index } = this.address[deep - 1];
+					if (_isTextNode(parent)) {
 						let prevBranch = parent.children[index] as TextNode | TextLeaf;
-						this.address[i].parent = prevBranch;
-						this.address[i].index = (_isTextLeaf(prevBranch) ? prevBranch.text : prevBranch.children).length - 1;
+						this.address[deep].parent = prevBranch;
+						this.address[deep].index = (_isTextLeaf(prevBranch) ? prevBranch.text : prevBranch.children).length - 1;
 					}
 				}
+				let { parent, index } = this.address[this.address.length - 1];
+				if (!_isTextLeaf(parent)) throw TypeError("TextLeaf not found!");
+				let length = parent.text[index].length,
+					to = this.curLine.from - 1;
+				this.curLine = {
+					number: this.curLine.number - 1,
+					text: parent.text[index],
+					from: to - length,
+					to,
+					length
+				};
 				return true;
 			}
 		}
@@ -116,14 +118,14 @@ export class TextCursor {
 	}
 
 	public getPrevLine(): ILine | null {
-		if (this.curLine.number <= 1 || !this.prev()) return null;
+		if (!this.prev() || this.curLine.number <= 1) return null;
 		let prevLine = this.curLine;
 		this.next();
 		return prevLine;
 	}
 
 	public getNextLine(): ILine | null {
-		if (this.curLine.number >= this.doc.lines || !this.next()) return null;
+		if (!this.next() || this.curLine.number >= this.doc.lines) return null;
 		let nextLine = this.curLine;
 		this.prev();
 		return nextLine;

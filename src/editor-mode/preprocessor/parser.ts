@@ -291,7 +291,8 @@ export class EditorParserState {
 			this.inlineQueue.resolveAll(this.line.to); */
 			// if there is trailing blank lines, then skip them all
 			while (this.linePos < this.endOfStream) {
-				this.line = this.doc.line(this.linePos + 1);
+				this.textCursor.next();
+				this.line = this.textCursor.curLine;
 				if (!this.isBlankLine()) break;
 			}
 			// Is sufficient to resolve the current context once,

@@ -1,4 +1,4 @@
-import { MarkdownPostProcessor } from "obsidian";
+import { MarkdownPostProcessor, MarkdownPostProcessorContext } from "obsidian";
 import { MarkdownViewMode, Format } from "src/enums";
 import { PluginSettings } from "src/types";
 import { InlineRules, BlockRules } from "src/format-configs/rules";
@@ -11,9 +11,24 @@ function _trimTag(tagStr: string): string {
 		.replaceAll(/\s{2,}/g, " ");
 }
 
-function _drawCustomSpan(settings: PluginSettings, el: HTMLElement): void {
+function _isLeafBlock(el: HTMLElement): boolean {
+	return (
+		el instanceof HTMLParagraphElement ||
+		el instanceof HTMLHeadingElement
+	);
+}
+
+function _isTableCellWrapper(el: HTMLElement): boolean {
+	return el.hasClass("table-cell-wrapper");
+}
+
+function _isCallout(el: HTMLElement): boolean {
+	return el.hasClass("callout");
+}
+
+function _drawCustomSpan(settings: PluginSettings, targetEl: HTMLElement): void {
 	let baseCls = InlineRules[Format.CUSTOM_SPAN].class,
-		customSpanElements = el.querySelectorAll<HTMLElement>("." + baseCls);
+		customSpanElements = targetEl.querySelectorAll<HTMLElement>("." + baseCls);
 
 	customSpanElements.forEach((el) => {
 		if (!(el.firstChild instanceof Text && el.firstChild.textContent)) return;
@@ -28,8 +43,8 @@ function _drawCustomSpan(settings: PluginSettings, el: HTMLElement): void {
 	});
 }
 
-function _drawCustomHighlight(settings: PluginSettings, el: HTMLElement): void {
-	let markElements = el.querySelectorAll<HTMLElement>("mark"),
+function _drawCustomHighlight(settings: PluginSettings, targetEl: HTMLElement): void {
+	let markElements = targetEl.querySelectorAll<HTMLElement>("mark"),
 		baseCls = InlineRules[Format.HIGHLIGHT].class;
 
 	markElements.forEach((el) => {
@@ -44,27 +59,27 @@ function _drawCustomHighlight(settings: PluginSettings, el: HTMLElement): void {
 	});
 }
 
-function _drawFencedDiv(settings: PluginSettings, el: HTMLElement): void {
-	if (!(el.firstChild instanceof Text && el.firstChild.textContent)) return;
+function _drawFencedDiv(settings: PluginSettings, targetEl: HTMLElement): void {
+	if (!(targetEl.firstChild instanceof Text && targetEl.firstChild.textContent)) return;
 
 	FENCED_DIV_RE.lastIndex = 0;
 	let baseCls = BlockRules[Format.FENCED_DIV].class,
-		textNode = el.firstChild,
-		lineBreakEl = el.querySelector("br"),
+		textNode = targetEl.firstChild,
+		lineBreakEl = targetEl.querySelector("br"),
 		match = FENCED_DIV_RE.exec(textNode.textContent ?? "");
 
 	if (match) {
 		let tag = match[1]!,
 			clsList = _trimTag(tag).split(" ");
-		el.addClass(baseCls, ...clsList);
+		targetEl.addClass(baseCls, ...clsList);
 		if (settings.alwaysShowFencedDivTag & MarkdownViewMode.PREVIEW_MODE) return;
-		el.removeChild(textNode);
-		if (lineBreakEl) { el.removeChild(lineBreakEl) }
+		targetEl.removeChild(textNode);
+		if (lineBreakEl) { targetEl.removeChild(lineBreakEl) }
 	}
 }
 
 export class ReadingModeSyntaxExtender {
-	private readonly _selectorQuery = "p, h1, h2, h3, h4, h5, h6, td, th, li:not(:has(p)), .callout-title-inner";
+	private readonly _SELECTOR_QUERY = "p, h1, h2, h3, h4, h5, h6, td, th, li:not(:has(p)), .callout-title-inner" as const;
 	private readonly _settings: PluginSettings;
 
 	constructor(settings: PluginSettings) {
@@ -72,18 +87,11 @@ export class ReadingModeSyntaxExtender {
 		this.postProcess.sortOrder = 0;
 	}
 
-	private _parseInline(targetEl: HTMLElement): void {
-		let targetedEls = targetEl.querySelectorAll(this._selectorQuery),
+	private _parseInline(targetEl: HTMLElement, capsulated = true): void {
+		let targetedEls = _isTableCellWrapper(targetEl) || !capsulated && _isLeafBlock(targetEl)
+				? [targetEl]
+				: targetEl.querySelectorAll<HTMLElement>(this._SELECTOR_QUERY),
 			parsingQueue: PreviewModeParser[] = [];
-
-		if (targetEl.classList.contains("table-cell-wrapper")) {
-			new PreviewModeParser(targetEl, parsingQueue).streamParse();
-			for (let i = 0; i < parsingQueue.length; i++) {
-				parsingQueue[i].streamParse();
-				if (i >= 100) { throw Error(`${parsingQueue}`) }
-			}
-			return;
-		}
 
 		for (let i = 0; i < targetedEls.length; i++) {
 			new PreviewModeParser(targetedEls[i], parsingQueue).streamParse();
@@ -95,46 +103,52 @@ export class ReadingModeSyntaxExtender {
 		}
 	}
 
-	private _isTargeted(container: HTMLElement): boolean {
-		let firstChild = container.firstElementChild;
+	private _isTargeted(sectionEl: HTMLElement, capsulated = true): boolean {
+		let contentEl = capsulated ? sectionEl.firstElementChild as HTMLElement : sectionEl;
 		if (
-			container.classList.contains("table-cell-wrapper") ||
-			firstChild && (
-			firstChild instanceof HTMLParagraphElement ||
-			firstChild instanceof HTMLTableElement ||
-			firstChild instanceof HTMLUListElement ||
-			firstChild instanceof HTMLOListElement ||
-			firstChild.tagName == "BLOCKQUOTE" ||
-			firstChild.classList.contains("callout")
+			_isTableCellWrapper(sectionEl) || // Intended to draw over editor table cell
+			contentEl && (
+			_isLeafBlock(contentEl) ||
+			_isCallout(contentEl) ||
+			contentEl instanceof HTMLTableElement ||
+			contentEl instanceof HTMLUListElement ||
+			contentEl instanceof HTMLOListElement ||
+			contentEl.tagName == "BLOCKQUOTE"
 		)) { return true }
 		return false;
 	}
 
-	private _decorate(container: HTMLElement): void {
+	private _draw(sectionEl: HTMLElement, capsulated = true): void {
+		if (!this._isTargeted(sectionEl, capsulated)) return;
+
 		if (this._settings.customHighlight & MarkdownViewMode.PREVIEW_MODE)
-			_drawCustomHighlight(this._settings, container);
+			_drawCustomHighlight(this._settings, sectionEl);
 
-		if (
-			this._settings.fencedDiv & MarkdownViewMode.PREVIEW_MODE &&
-			container.firstElementChild instanceof HTMLParagraphElement
-		) _drawFencedDiv(this._settings, container.firstElementChild);
+		if (this._settings.fencedDiv & MarkdownViewMode.PREVIEW_MODE) {
+			let targetEl = capsulated ? sectionEl.firstElementChild : sectionEl;
+			if (targetEl instanceof HTMLParagraphElement)
+				_drawFencedDiv(this._settings, targetEl);
+		}
 
-		if (this._isTargeted(container)) this._parseInline(container);
+		this._parseInline(sectionEl, capsulated);
 
 		if (this._settings.customSpan & MarkdownViewMode.PREVIEW_MODE)
-			_drawCustomSpan(this._settings, container);
+			_drawCustomSpan(this._settings, sectionEl);
 	}
 
-	public postProcess: MarkdownPostProcessor = (container) => {
-		let isWholeDoc = container.classList.contains("markdown-preview-view");
+	public postProcess: MarkdownPostProcessor = (containerOrSection: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+		let isWholeDoc = containerOrSection == ctx.containerEl,
+			isDefaultExported = containerOrSection.parentElement?.hasClass("print") ?? false,
+			capsulated = !isWholeDoc || isDefaultExported;
+
 		if (isWholeDoc) {
-			if (!this._settings.decoratePDF) { return }
-			let sectionEls = container.querySelectorAll<HTMLElement>("&>div");
+			if (!this._settings.decoratePDF) return;
+			let sectionEls = containerOrSection.querySelectorAll<HTMLElement>(capsulated ? "&>div" : "&>*");
 			for (let i = 0; i < sectionEls.length; i++) {
-				this._decorate(sectionEls[i]);
+				this._draw(sectionEls[i], capsulated);
 			}
 		} else {
-			this._decorate(container);
+			this._draw(containerOrSection, true);
 		}
 	}
 }

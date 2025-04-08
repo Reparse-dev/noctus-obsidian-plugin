@@ -21,6 +21,13 @@ declare module "@codemirror/state" {
 	}
 }
 
+declare module "obsidian" {
+	interface MarkdownPostProcessorContext {
+		el: HTMLElement;
+		containerEl: HTMLElement;
+	}
+}
+
 declare global {
 	interface Window {
 		globalThis: typeof globalThis;

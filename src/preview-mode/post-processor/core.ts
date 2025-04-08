@@ -69,6 +69,7 @@ export class ReadingModeSyntaxExtender {
 
 	constructor(settings: PluginSettings) {
 		this._settings = settings;
+		this.postProcess.sortOrder = 0;
 	}
 
 	private _parseInline(targetEl: HTMLElement): void {

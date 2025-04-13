@@ -9,7 +9,7 @@ import { editorCommands } from "src/editor-mode/formatting/commands";
 import { extendEditorCtxMenu } from "src/editor-mode/ui-components";
 import { TagManager } from "src/tag-manager";
 import { ReadingModeSyntaxExtender } from "src/preview-mode/post-processor/core";
-import { editorSyntaxExtender, refreshCall } from "src/editor-mode/cm-extension";
+import { editorSyntaxExtender, refreshCall } from "src/editor-mode/cm-extensions";
 
 export default class ExtendedMarkdownSyntax extends Plugin {
 	settings: PluginSettings;

@@ -7,7 +7,7 @@ import { BlockRules, InlineRules } from "src/format-configs/rules";
 import { trimTag } from "src/format-configs/format-utils";
 import { EditorParser } from "src/editor-mode/preprocessor/parser";
 import { SelectionObserver } from "src/editor-mode/preprocessor/observer";
-import { ActivityRecord } from "src/editor-mode/cm-extension";
+import { ActivityRecord } from "src/editor-mode/cm-extensions";
 import { LineBreak, HiddenWidget, ColorButton } from "src/editor-mode/decorator/widgets";
 import { REVEALED_SPOILER_DECO } from "src/editor-mode/decorator/decorations";
 import { getTagRange, iterTokenGroup, provideTokenPartsRanges } from "src/editor-mode/utils/token-utils"

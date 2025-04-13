@@ -1,6 +1,7 @@
 import type { SyntaxNode, Tree } from "@lezer/common";
 import type { Format, MarkdownViewMode, TokenLevel, Delimiter, TokenStatus, Field, DisplayBehaviour } from "src/enums";
-import { Line, RangeSet, RangeValue, Text, Range, SelectionRange, EditorState } from "@codemirror/state"
+import { Line, RangeSet, RangeValue, Text, Range, SelectionRange, EditorState } from "@codemirror/state";
+import {} from "@codemirror/language";
 import { Decoration, DecorationSet } from "@codemirror/view";
 import { ColorComponent, Command, DropdownComponent, Editor, ExtraButtonComponent, IconName, MarkdownFileInfo, MarkdownView, Setting, SliderComponent, TextAreaComponent, TextComponent, ToggleComponent } from "obsidian";
 import ExtendedMarkdownSyntax from "main";
@@ -11,13 +12,48 @@ declare module "@codemirror/state" {
 	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface ILine extends Line {}
 
+	/**
+	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
+	 * CodeMirror.
+	 * 
+	 * @see https://github.com/codemirror/state/blob/main/src/text.ts
+	 */
 	interface TextNode extends Text {
 		readonly children: readonly Text[];
 	}
 
+	/**
+	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
+	 * CodeMirror.
+	 * 
+	 * @see https://github.com/codemirror/state/blob/main/src/text.ts
+	 */
 	interface TextLeaf extends Text {
 		readonly children: null;
 		text: string[];
+	}
+}
+
+declare module "@codemirror/language" {
+	/**
+	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
+	 * CodeMirror.
+	 * 
+	 * @see https://github.com/codemirror/language/blob/main/src/language.ts
+	 */
+	class LanguageState {
+		readonly tree: Tree;
+		readonly context: ParseContext;
+	}
+
+	/**
+	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
+	 * CodeMirror.
+	 * 
+	 * @see https://github.com/codemirror/language/blob/main/src/language.ts
+	 */
+	interface ParseContext {
+		tree: Tree;
 	}
 }
 

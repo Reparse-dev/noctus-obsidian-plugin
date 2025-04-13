@@ -435,6 +435,7 @@ export class EditorParserState {
 export class EditorParser {
 	private _state: EditorParserState;
 	private _queue: _TokenQueue = new _TokenQueue();
+	private _changeSet: ChangeSet | null = null;
 
 	public inlineTokens: TokenGroup = [];
 	public blockTokens: TokenGroup = [];
@@ -455,6 +456,14 @@ export class EditorParser {
 		return level == TokenLevel.INLINE
 			? this.inlineTokens
 			: this.blockTokens;
+	}
+
+	public storeChanges(changeSet: ChangeSet) {
+		if (this._changeSet) {
+			this._changeSet.compose(changeSet);
+		} else {
+			this._changeSet = changeSet;
+		}
 	}
 	
 	/**
@@ -481,6 +490,7 @@ export class EditorParser {
 			[TokenLevel.INLINE]: { from: 0, initTo: 0, changedTo: this.inlineTokens.length },
 			[TokenLevel.BLOCK]: { from: 0, initTo: 0, changedTo: this.blockTokens.length }
 		}
+		this._changeSet = null;
 	}
 
 	/**
@@ -490,8 +500,8 @@ export class EditorParser {
 	public applyChange(doc: Text, tree: Tree, oldTree: Tree, changes: ChangeSet): void {
 		// Start stream offset can be the shortest length of both old and new
 		// tree, or the start offset of the changed range.
-		let changedRange = _composeChanges(changes),
-			startStreamOffset = Math.min(oldTree.length, tree.length) + 1;
+		let changedRange = this._changeSet ? _composeChanges(this._changeSet) : null,
+		this._changeSet = null;
 
 		if (changedRange)
 			startStreamOffset = Math.min(startStreamOffset, changedRange.from);

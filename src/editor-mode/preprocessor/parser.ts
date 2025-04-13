@@ -442,6 +442,7 @@ export class EditorParser {
 
 	public reparsedRanges: Record<TokenLevel, { from: number, initTo: number, changedTo: number }>;
 	public lastStreamPoint: PlainRange = { from: 0, to: 0 };
+	public oldTree: Tree;
 
 	readonly settings: PluginSettings;
 
@@ -490,6 +491,8 @@ export class EditorParser {
 			[TokenLevel.INLINE]: { from: 0, initTo: 0, changedTo: this.inlineTokens.length },
 			[TokenLevel.BLOCK]: { from: 0, initTo: 0, changedTo: this.blockTokens.length }
 		}
+		this.oldTree = tree;
+
 		this._changeSet = null;
 	}
 
@@ -497,22 +500,24 @@ export class EditorParser {
 	 * Apply the change comes from the document or the length difference
 	 * between previous parsed tree and the current one.
 	 */
-	public applyChange(doc: Text, tree: Tree, oldTree: Tree, changes: ChangeSet): void {
+	public applyChange(doc: Text, tree: Tree): void {
 		// Start stream offset can be the shortest length of both old and new
 		// tree, or the start offset of the changed range.
 		let changedRange = this._changeSet ? _composeChanges(this._changeSet) : null,
+			startStreamOffset = Math.min(this.oldTree.length, tree.length) + 1;
+
 		this._changeSet = null;
 
 		if (changedRange)
 			startStreamOffset = Math.min(startStreamOffset, changedRange.from);
 		
 		let config: StateConfig = { doc, tree, offset: startStreamOffset, settings: this.settings };
-		this._defineState(config, oldTree);
+		this._defineState(config);
 
 		// Nearest next blank line is the end stream, unless there is no blank
 		// line exist within the new tree range, or the changed range encounters
 		// such interferer node.
-		let endStreamLine = changedRange && !this._checkInterferer(oldTree, changedRange)
+		let endStreamLine = changedRange && !this._checkInterferer(changedRange)
 			? getBlockEndAt(doc, changedRange.changedTo)
 			: getBlockEndAt(doc, tree.length);
 		this._state.endOfStream = endStreamLine.number;
@@ -541,13 +546,14 @@ export class EditorParser {
 		this.reparsedRanges[TokenLevel.BLOCK].changedTo = this.blockTokens.length;
 		this.inlineTokens = this.inlineTokens.concat(leftTokens.inline);
 		this.blockTokens = this.blockTokens.concat(leftTokens.block);
+		this.oldTree = tree;
 	}
 
 	/** Define new state as parsing begins. */
-	private _defineState(config: StateConfig, oldTree?: Tree): void {
+	private _defineState(config: StateConfig): void {
 		this._state = new EditorParserState(config, this.inlineTokens, this.blockTokens);
 		this._queue.attachState(this._state);
-		if (oldTree) this._shiftOffsetByNode(oldTree);
+		if (this.oldTree) this._shiftOffsetByNode();
 	}
 
 	/**
@@ -558,10 +564,10 @@ export class EditorParser {
 	 * 
 	 * Must be done along with defining new state.
 	 */
-	private _shiftOffsetByNode(oldTree: Tree) {
+	private _shiftOffsetByNode() {
 		let oldOffset = this._state.globalOffset,
 			newNode = findShifterAt(this._state.tree, oldOffset),
-			oldNode = findShifterAt(oldTree, oldOffset),
+			oldNode = findShifterAt(this.oldTree, oldOffset),
 			newOffset: number | null = null;
 		
 		// Try to find it in the new tree.
@@ -674,10 +680,10 @@ export class EditorParser {
 	 * the new tree. That's including the delimiters of codeblock, mathblock,
 	 * or comment block.
 	 */
-	private _checkInterferer(oldTree: Tree, changedRange: ChangedRange): boolean {
+	private _checkInterferer(changedRange: ChangedRange): boolean {
 		return (
 			hasInterferer(this._state.tree, changedRange.from, changedRange.changedTo) ||
-			hasInterferer(oldTree, changedRange.from, changedRange.initTo)
+			hasInterferer(this.oldTree, changedRange.from, changedRange.initTo)
 		);
 	}
 

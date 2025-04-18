@@ -1,4 +1,4 @@
-import { Line, Text, TextLeaf, TextNode, ILine } from "@codemirror/state";
+import { Line, Text, TextLeaf, TextNode } from "@codemirror/state";
 import { PlainRange } from "src/types";
 
 // TODO: utilize TextCursor to all functions

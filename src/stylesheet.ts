@@ -77,14 +77,13 @@ export class StyleSheetHandler {
 		this._subHandlers.forEach(handler => handler.moveSingleRule(index, to));
 	}
 
-	public moveRule(fromIndex: number, toIndex: number): void {
-		if (fromIndex == toIndex) { return }
-		let greaterIndex = Math.max(fromIndex, toIndex),
-			smallerIndex = Math.min(fromIndex, toIndex),
-			ruleStr = this._stylesheet.cssRules.item(greaterIndex)!.cssText;
-		this.removeSingle(greaterIndex);
-		this.insert(ruleStr, smallerIndex);
-		this._subHandlers.forEach(handler => handler.moveRule(fromIndex, toIndex));
+	public moveRule(oldIndex: number, newIndex: number): void {
+		if (oldIndex == newIndex) return;
+		if (newIndex > oldIndex) newIndex--;
+		let ruleStr = this._stylesheet.cssRules.item(oldIndex)!.cssText;
+		this.removeSingle(oldIndex);
+		this.insert(ruleStr, newIndex);
+		this._subHandlers.forEach(handler => handler.moveRule(oldIndex, newIndex));
 	}
 
 	public removeSingle(index: number): void {

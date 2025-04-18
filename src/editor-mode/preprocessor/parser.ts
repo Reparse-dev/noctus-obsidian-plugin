@@ -724,10 +724,10 @@ export class EditorParser {
 	}
 
 	private _filterTokens(tokens: TokenGroup, reparsedRange: typeof this.reparsedRanges[TokenLevel]): TokenGroup {
-		let index = 0,
-			reparsedFrom: number | undefined,
+		let reparsedFrom: number | undefined,
 			reparsedTo: number | undefined,
-			offset = this._state.globalOffset;
+			offset = this._state.globalOffset,
+			index = findTokenIndexAt(tokens, offset) ?? tokens.length;
 
 		for (let curToken = tokens[index]; index < tokens.length; curToken = tokens[++index]) {
 			// Keep find token touched by the current offset

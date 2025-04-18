@@ -32,6 +32,10 @@ mark {
 	border-radius: 2px;
 }
 
+.markdown-rendered mark.custom-highlight:not([style]) {
+	color: var(--text-normal);
+}
+
 .cm-highlight-color-btn {
 	margin-inline: 2px;
 	width: 12px;

@@ -385,7 +385,7 @@ export type TagSettingsSpec = {
 	tagFieldPlaceholder: string;
 	tagFilter: RegExp;
 	onAdd?: (settingTab: ExtendedSettingTab, tagSettingItem: Setting, newConfig: TagConfig) => unknown;
-	onMove?: (settingTab: ExtendedSettingTab, oldIndex: number, newIndex: number) => unknown;
+	onMoved?: (settingTab: ExtendedSettingTab, oldIndex: number, newIndex: number) => unknown;
 	onResetted?: (settingTab: ExtendedSettingTab) => unknown;
 	onDelete?: (settingTab: ExtendedSettingTab, deletedIndex: number) => unknown;
 	onTagChange?: (settingTab: ExtendedSettingTab, changedConfig: TagConfig, index: number) => unknown;

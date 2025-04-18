@@ -1,4 +1,4 @@
-import { Line, Text, TextLeaf, TextNode, ILine } from "@codemirror/state";
+import { Line, Text, TextLeaf, TextNode } from "@codemirror/state";
 import { PlainRange } from "src/types";
 
 // TODO: utilize TextCursor to all functions
@@ -13,9 +13,24 @@ function _isTextNode(doc: Text): doc is TextNode {
 	return doc.children !== null;
 }
 
+export class ILine extends Line {
+	readonly from: number;
+	readonly to: number;
+	readonly number: number;
+	readonly text: string;
+
+	constructor(from: number, to: number, number: number, text: string) {
+		super();
+		this.from = from;
+		this.to = to;
+		this.number = number;
+		this.text = text;
+	}
+}
+
 export class TextCursor {
 	public address: LineAddress;
-	public curLine: ILine;
+	public curLine: Line;
 
 	private constructor() {}
 
@@ -28,25 +43,21 @@ export class TextCursor {
 			let { parent, index } = this.address[deep],
 				branches = _isTextLeaf(parent) ? parent.text : parent.children;
 			if (index + 1 < branches.length) {
-				this.address[deep].index++;
-				while (++deep < this.address.length) {
-					let { parent, index } = this.address[deep - 1];
-					if (_isTextNode(parent)) {
-						this.address[deep].parent = parent.children[index] as TextNode | TextLeaf;
-						this.address[deep].index = 0;
-					}
+				this.address[deep].index = ++index;
+				if (this.address.splice(deep + 1).length) while (_isTextNode(parent)) {
+					parent = parent.children[index] as TextNode | TextLeaf;
+					index = 0;
+					this.address.push({ parent, index });
 				}
-				let { parent, index } = this.address[this.address.length - 1];
 				if (!_isTextLeaf(parent)) throw TypeError("TextLeaf not found!");
 				let length = parent.text[index].length,
 					from = this.curLine.to + 1;
-				this.curLine = {
-					number: this.curLine.number + 1,
-					text: parent.text[index],
+				this.curLine = new ILine(
 					from,
-					to: from + length,
-					length
-				};
+					from + length,
+					this.curLine.number + 1,
+					parent.text[index]
+				);
 				return true;
 			}
 		}
@@ -57,25 +68,29 @@ export class TextCursor {
 		for (let deep = this.address.length - 1; deep >= 0; deep--) {
 			if (this.address[deep].index > 0) {
 				this.address[deep].index--;
-				while (++deep < this.address.length) {
-					let { parent, index } = this.address[deep - 1];
-					if (_isTextNode(parent)) {
-						let prevBranch = parent.children[index] as TextNode | TextLeaf;
-						this.address[deep].parent = prevBranch;
-						this.address[deep].index = (_isTextLeaf(prevBranch) ? prevBranch.text : prevBranch.children).length - 1;
+				let { parent, index } = this.address[deep];
+				if (this.address.splice(deep + 1).length && _isTextNode(parent)) while (true) {
+					let isTextLeaf: boolean;
+					parent = (parent as TextNode).children[index] as TextNode | TextLeaf;
+					if (_isTextLeaf(parent)) {
+						isTextLeaf = true;
+						index = parent.text.length - 1;
+					} else {
+						isTextLeaf = false;
+						index = parent.children.length - 1;
 					}
+					this.address.push({ parent, index });
+					if (isTextLeaf) break;
 				}
-				let { parent, index } = this.address[this.address.length - 1];
 				if (!_isTextLeaf(parent)) throw TypeError("TextLeaf not found!");
 				let length = parent.text[index].length,
 					to = this.curLine.from - 1;
-				this.curLine = {
-					number: this.curLine.number - 1,
-					text: parent.text[index],
-					from: to - length,
+				this.curLine = new ILine(
+					to - length,
 					to,
-					length
-				};
+					this.curLine.number - 1,
+					parent.text[index]
+				);
 				return true;
 			}
 		}
@@ -95,36 +110,37 @@ export class TextCursor {
 	}
 
 	public gotoLast(): TextCursor {
-		this.address.forEach((branchAddress, i) => {
-			let { parent } = branchAddress,
-				branches = _isTextLeaf(parent) ? parent.text : parent.children;
-			branchAddress.index = branches.length - 1;
-			if (i + 1 < this.address.length) {
-				this.address[i + 1].parent = branches[branchAddress.index] as TextLeaf | TextNode;
-			} else {
-				let to = this.doc.length,
-					lineNum = this.doc.lines,
-					lineStr = branches[branchAddress.index] as string;
-				this.curLine = {
-					from: to - lineStr.length,
-					to,
-					number: lineNum,
-					length: lineStr.length,
-					text: lineStr
-				};
-			}
-		});
+		this.address.splice(1);
+		let { parent, index } = this.address[0],
+			root = parent;
+		while (_isTextNode(parent)) {
+			index = parent.children.length - 1;
+			if (root !== parent) this.address.push({ parent, index });
+			else this.address[0].index = index;
+			parent = parent.children[index] as TextNode | TextLeaf;
+		}
+		index = parent.text.length - 1;
+		if (root !== parent) this.address[0].index = index;
+		else this.address.push({ parent, index });
+		let lineStr = parent.text[index];
+		this.curLine = {
+			from: root.length - lineStr.length,
+			to: root.length,
+			text: lineStr,
+			number: root.lines,
+			length: lineStr.length
+		};
 		return this;
 	}
 
-	public getPrevLine(): ILine | null {
+	public getPrevLine(): Line | null {
 		if (!this.prev() || this.curLine.number <= 1) return null;
 		let prevLine = this.curLine;
 		this.next();
 		return prevLine;
 	}
 
-	public getNextLine(): ILine | null {
+	public getNextLine(): Line | null {
 		if (!this.next() || this.curLine.number >= this.doc.lines) return null;
 		let nextLine = this.curLine;
 		this.prev();
@@ -229,7 +245,7 @@ export function sliceStrFromLine(line: Line, from: number, to: number): string {
 	return line.text.slice(from, to);
 }
 
-export function getLineAddressAt(doc: Text, offset: number): { address: LineAddress, line: ILine } {
+export function getLineAddressAt(doc: Text, offset: number): { address: LineAddress, line: Line } {
 	let parent = doc,
 		address: LineAddress = [],
 		lineNum = 0,
@@ -265,12 +281,11 @@ export function getLineAddressAt(doc: Text, offset: number): { address: LineAddr
 		passedLen += curLineStr.length + 1;
 	}
 
-	let line: ILine = {
-		number: lineNum,
-		text: lineStr,
-		from: passedLen,
-		to: passedLen + lineStr.length,
-		length: lineStr.length
-	}
+	let line = new ILine(
+		passedLen,
+		passedLen + lineStr.length,
+		lineNum,
+		lineStr
+	);
 	return { address, line };
 }

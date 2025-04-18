@@ -70,13 +70,10 @@ export class TagManager {
 	}
 	
 	public move(format: TagSupportFormat, oldIndex: number, newIndex: number): void {
+		if (newIndex == oldIndex) return;
 		let configs = this.configsMap[format],
-			movedConfig = configs[oldIndex];
-		configs.splice(
-			Math.min(oldIndex, newIndex),
-			0,
-			...configs.splice(Math.max(oldIndex, newIndex), 1)
-		);
+			movedConfig = configs.splice(oldIndex, 1)[0];
+		configs.splice(newIndex, 0, movedConfig);
 		this._fireHandlers(format, "move", movedConfig, oldIndex, newIndex);
 	}
 

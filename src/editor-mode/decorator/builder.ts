@@ -7,11 +7,11 @@ import { BlockRules, InlineRules } from "src/format-configs/rules";
 import { trimTag } from "src/format-configs/format-utils";
 import { EditorParser } from "src/editor-mode/preprocessor/parser";
 import { SelectionObserver } from "src/editor-mode/preprocessor/observer";
-import { ActivityRecord } from "src/editor-mode/cm-extension";
+import { ActivityRecord } from "src/editor-mode/cm-extensions";
 import { LineBreak, HiddenWidget, ColorButton } from "src/editor-mode/decorator/widgets";
 import { REVEALED_SPOILER_DECO } from "src/editor-mode/decorator/decorations";
 import { getTagRange, iterTokenGroup, provideTokenPartsRanges } from "src/editor-mode/utils/token-utils"
-import { TextCursor } from "../utils/doc-utils";
+import { TextCursor } from "src/editor-mode/utils/doc-utils";
 
 interface RangeSetUpdate<T extends RangeValue> {
 	add?: readonly Range<T>[];
@@ -200,10 +200,6 @@ export class DecorationBuilder {
 	private readonly _lineBreakReplacer: _LineBreakReplacer;
 	private readonly _selectionObserver: SelectionObserver;
 	private readonly _settings: PluginSettings;
-	private readonly _indexCaches = {
-		inlineToken: { number: 0 }, // 0-based
-		blockToken: { number: 0 } // 0-based
-	}
 
 	public readonly holder: _DecorationHolder;
 
@@ -322,7 +318,6 @@ export class DecorationBuilder {
 		iterTokenGroup({
 			tokens: this._parser.inlineTokens,
 			ranges: visibleRanges,
-			indexCache: this._indexCaches.inlineToken,
 			callback: token => {
 				if (token.status != TokenStatus.ACTIVE) return;
 				if (token.type == Format.HIGHLIGHT) hlTokens.push(token);
@@ -354,7 +349,6 @@ export class DecorationBuilder {
 		iterTokenGroup({
 			tokens: this._parser.blockTokens,
 			ranges: visibleRanges,
-			indexCache: this._indexCaches.blockToken,
 			callback: token => {
 				if (token.status != TokenStatus.ACTIVE) return;
 	

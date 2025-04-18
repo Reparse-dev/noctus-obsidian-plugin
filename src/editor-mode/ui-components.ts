@@ -6,7 +6,7 @@ import { Format, TokenLevel, TokenStatus } from "src/enums";
 import { getActiveCanvasNodeCoords } from "src/editor-mode/utils/canvas-utils";
 import { Formatter } from "src/editor-mode/formatting/formatter";
 import { supportTag } from "src/format-configs/format-utils";
-import { tagMenuOptionCaches, instancesStore } from "src/editor-mode/cm-extension";
+import { tagMenuOptionCaches, instancesStore } from "src/editor-mode/cm-extensions";
 import { ctxMenuCommands } from "src/editor-mode/formatting/commands";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

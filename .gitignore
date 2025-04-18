@@ -31,3 +31,4 @@ build
 # ignored
 .ignored
 *.ignored
+*.svg

@@ -1,10 +1,9 @@
-import { IndexCache, PlainRange, Token, TokenGroup } from "src/types";
+import { PlainRange, Token, TokenGroup } from "src/types";
 
 type TokenPartsRanges = Record<"openRange" | "closeRange" | "tagRange" | "contentRange", PlainRange>;
 interface IterTokenGroupSpec {
 	tokens: TokenGroup,
-	ranges: PlainRange[] | readonly PlainRange[],
-	indexCache: IndexCache
+	ranges: PlainRange[] | readonly PlainRange[]
 	callback: (token: Token) => unknown,
 }
 
@@ -27,41 +26,52 @@ export function isToken(range: PlainRange): range is Token {
 	return type !== undefined && openLen !== undefined && tagLen !== undefined && closeLen !== undefined;
 }
 
-export function moveTokenIndexCache(tokens: TokenGroup, offset: number, indexCache: IndexCache): void {
-	if (tokens.length == 0) {
-		indexCache.number = 0;
-		return;
+export function iterTokenGroup(spec: IterTokenGroupSpec): void {
+	let { tokens, ranges, callback } = spec,
+		tokenI = findTokenIndexAt(tokens, ranges[0]?.from ?? 0),
+		rangeI = 0;
+
+	if (tokenI === null) return;
+
+	while (
+		tokenI < tokens.length &&
+		rangeI < ranges.length
+	) {
+		if (ranges[rangeI].to <= tokens[tokenI].from) { rangeI++; continue }
+		if (
+			tokens[tokenI].from < ranges[rangeI].to &&
+			tokens[tokenI].to > ranges[rangeI].from
+		) {
+			callback(tokens[tokenI]);
+		}
+		tokenI++;
 	}
-
-	if (indexCache.number >= tokens.length)
-		indexCache.number = tokens.length - 1;
-
-	let curIndex = indexCache.number,
-		curToken = tokens[curIndex];
-	if (offset < curToken.from && curIndex != 0) {
-		do {
-			curToken = tokens[--curIndex];
-		} while (offset < curToken.from && curIndex != 0)
-	} else if (offset > curToken.to && curIndex != tokens.length - 1) {
-		do {
-			curToken = tokens[++curIndex];
-		} while (offset > curToken.to && curIndex != tokens.length - 1)
-	}
-
-	indexCache.number = curIndex;
 }
 
-export function iterTokenGroup(spec: IterTokenGroupSpec): void {
-	let { tokens, ranges, callback, indexCache } = spec;
-	moveTokenIndexCache(tokens, ranges[0]?.from ?? 0, indexCache);
-	for (
-		let i = indexCache.number, j = 0;
-		i < tokens.length && j < ranges.length;
-	) {
-		if (ranges[j].to <= tokens[i].from) { j++; continue }
-		if (tokens[i].from < ranges[j].to && tokens[i].to > ranges[j].from) {
-			callback(tokens[i]);
-		}
-		i++;
+export function findTokenIndexAt(tokens: TokenGroup, offset: number): number | null {
+	if (!tokens.length) return null;
+
+	let base = 32768,
+		factor = 2,
+		index = 0;
+
+	while (base !== 32) {
+		if (tokens.length > base)
+			while (tokens[index].from <= offset) {
+				let end = Math.min(index + base, tokens.length);
+				if (tokens[end - 1].to < offset) index = end;
+				else break;
+			}
+
+		base /= factor;
+		factor *= 2;
 	}
+
+	for (
+		let end = Math.min(index + base, tokens.length);
+		index < end && tokens[index].to < offset;
+		index++
+	);
+	
+	return index < tokens.length ? index : null;
 }

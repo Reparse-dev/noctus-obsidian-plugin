@@ -203,11 +203,10 @@ export class ExtendedSettingTab extends PluginSettingTab {
 		}
 
 		this._makeDragable(groupEl, evt => {
-			let oldIndex = evt.oldDraggableIndex,
-				newIndex = evt.newDraggableIndex;
-			if (this.isHidden || oldIndex === undefined || newIndex === undefined || oldIndex == newIndex) return;
+			let { oldIndex, newIndex } = evt;
+			if (oldIndex === undefined || newIndex === undefined || oldIndex == newIndex) return;
 			tagManager.move(spec.type, oldIndex, newIndex);
-			spec.onMove?.(this, oldIndex, newIndex);
+			spec.onMoved?.(this, oldIndex, newIndex);
 		});
 	}
 
@@ -349,7 +348,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
 		});
 	}
 
-	private _makeDragable(groupEl: HTMLElement, onEnd: (evt: SortableEvent) => unknown): void {
+	private _makeDragable(groupEl: HTMLElement, onMoved: (evt: SortableEvent) => unknown): void {
 		Sortable.create(groupEl, {
 			handle: ".ems-button-drag-handle",
 			animation: 100,
@@ -358,7 +357,7 @@ export class ExtendedSettingTab extends PluginSettingTab {
 			fallbackOnBody: true,
 			fallbackClass: "ems-setting-item-dragged",
 			fallbackTolerance: 4,
-			onEnd: onEnd,
+			onEnd: onMoved,
 		});
 	}
 }

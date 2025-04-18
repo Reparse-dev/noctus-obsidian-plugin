@@ -2,7 +2,7 @@ import { Command } from "obsidian";
 import { EditorView } from "@codemirror/view";
 import { Format } from "src/enums";
 import { CtxMenuCommand } from "src/types";
-import { instancesStore } from "src/editor-mode/cm-extension";
+import { instancesStore } from "src/editor-mode/cm-extensions";
 import { TagMenu } from "src/editor-mode/ui-components";
 import { Formatter } from "src/editor-mode/formatting/formatter";
 

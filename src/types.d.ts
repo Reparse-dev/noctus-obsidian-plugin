@@ -1,6 +1,7 @@
 import type { SyntaxNode, Tree } from "@lezer/common";
 import type { Format, MarkdownViewMode, TokenLevel, Delimiter, TokenStatus, Field, DisplayBehaviour } from "src/enums";
-import { Line, RangeSet, RangeValue, Text, Range, SelectionRange, EditorState } from "@codemirror/state"
+import { Line, RangeSet, RangeValue, Text, Range, SelectionRange, EditorState } from "@codemirror/state";
+import {} from "@codemirror/language";
 import { Decoration, DecorationSet } from "@codemirror/view";
 import { ColorComponent, Command, DropdownComponent, Editor, ExtraButtonComponent, IconName, MarkdownFileInfo, MarkdownView, Setting, SliderComponent, TextAreaComponent, TextComponent, ToggleComponent } from "obsidian";
 import ExtendedMarkdownSyntax from "main";
@@ -8,16 +9,49 @@ import { TagMenu } from "src/editor-mode/ui-components";
 import { ExtendedSettingTab } from "src/settings/ui/setting-tab";
 
 declare module "@codemirror/state" {
-	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-	export interface ILine extends Line {}
-
+	/**
+	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
+	 * CodeMirror.
+	 * 
+	 * @see https://github.com/codemirror/state/blob/main/src/text.ts
+	 */
 	interface TextNode extends Text {
 		readonly children: readonly Text[];
 	}
 
+	/**
+	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
+	 * CodeMirror.
+	 * 
+	 * @see https://github.com/codemirror/state/blob/main/src/text.ts
+	 */
 	interface TextLeaf extends Text {
 		readonly children: null;
 		text: string[];
+	}
+}
+
+declare module "@codemirror/language" {
+	/**
+	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
+	 * CodeMirror.
+	 * 
+	 * @see https://github.com/codemirror/language/blob/main/src/language.ts
+	 */
+	class LanguageState {
+		readonly tree: Tree;
+		readonly context: ParseContext;
+	}
+
+	/**
+	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
+	 * CodeMirror.
+	 * 
+	 * @see https://github.com/codemirror/language/blob/main/src/language.ts
+	 */
+	interface ParseContext {
+		tree: Tree;
+		treeLen: number;
 	}
 }
 
@@ -31,6 +65,10 @@ declare module "obsidian" {
 declare global {
 	interface Window {
 		globalThis: typeof globalThis;
+	}
+
+	type Writable<T> = {
+		-readonly [P in keyof T]: T[P];
 	}
 }
 
@@ -347,7 +385,7 @@ export type TagSettingsSpec = {
 	tagFieldPlaceholder: string;
 	tagFilter: RegExp;
 	onAdd?: (settingTab: ExtendedSettingTab, tagSettingItem: Setting, newConfig: TagConfig) => unknown;
-	onMove?: (settingTab: ExtendedSettingTab, oldIndex: number, newIndex: number) => unknown;
+	onMoved?: (settingTab: ExtendedSettingTab, oldIndex: number, newIndex: number) => unknown;
 	onResetted?: (settingTab: ExtendedSettingTab) => unknown;
 	onDelete?: (settingTab: ExtendedSettingTab, deletedIndex: number) => unknown;
 	onTagChange?: (settingTab: ExtendedSettingTab, changedConfig: TagConfig, index: number) => unknown;

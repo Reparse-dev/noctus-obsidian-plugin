@@ -51,6 +51,7 @@ declare module "@codemirror/language" {
 	 */
 	interface ParseContext {
 		tree: Tree;
+		treeLen: number;
 	}
 }
 

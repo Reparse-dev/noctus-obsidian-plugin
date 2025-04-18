@@ -13,9 +13,24 @@ function _isTextNode(doc: Text): doc is TextNode {
 	return doc.children !== null;
 }
 
+export class ILine extends Line {
+	readonly from: number;
+	readonly to: number;
+	readonly number: number;
+	readonly text: string;
+
+	constructor(from: number, to: number, number: number, text: string) {
+		super();
+		this.from = from;
+		this.to = to;
+		this.number = number;
+		this.text = text;
+	}
+}
+
 export class TextCursor {
 	public address: LineAddress;
-	public curLine: ILine;
+	public curLine: Line;
 
 	private constructor() {}
 
@@ -37,13 +52,12 @@ export class TextCursor {
 				if (!_isTextLeaf(parent)) throw TypeError("TextLeaf not found!");
 				let length = parent.text[index].length,
 					from = this.curLine.to + 1;
-				this.curLine = {
-					number: this.curLine.number + 1,
-					text: parent.text[index],
+				this.curLine = new ILine(
 					from,
-					to: from + length,
-					length
-				};
+					from + length,
+					this.curLine.number + 1,
+					parent.text[index]
+				);
 				return true;
 			}
 		}
@@ -71,13 +85,12 @@ export class TextCursor {
 				if (!_isTextLeaf(parent)) throw TypeError("TextLeaf not found!");
 				let length = parent.text[index].length,
 					to = this.curLine.from - 1;
-				this.curLine = {
-					number: this.curLine.number - 1,
-					text: parent.text[index],
-					from: to - length,
+				this.curLine = new ILine(
+					to - length,
 					to,
-					length
-				};
+					this.curLine.number - 1,
+					parent.text[index]
+				);
 				return true;
 			}
 		}
@@ -120,14 +133,14 @@ export class TextCursor {
 		return this;
 	}
 
-	public getPrevLine(): ILine | null {
+	public getPrevLine(): Line | null {
 		if (!this.prev() || this.curLine.number <= 1) return null;
 		let prevLine = this.curLine;
 		this.next();
 		return prevLine;
 	}
 
-	public getNextLine(): ILine | null {
+	public getNextLine(): Line | null {
 		if (!this.next() || this.curLine.number >= this.doc.lines) return null;
 		let nextLine = this.curLine;
 		this.prev();
@@ -232,7 +245,7 @@ export function sliceStrFromLine(line: Line, from: number, to: number): string {
 	return line.text.slice(from, to);
 }
 
-export function getLineAddressAt(doc: Text, offset: number): { address: LineAddress, line: ILine } {
+export function getLineAddressAt(doc: Text, offset: number): { address: LineAddress, line: Line } {
 	let parent = doc,
 		address: LineAddress = [],
 		lineNum = 0,
@@ -268,12 +281,11 @@ export function getLineAddressAt(doc: Text, offset: number): { address: LineAddr
 		passedLen += curLineStr.length + 1;
 	}
 
-	let line: ILine = {
-		number: lineNum,
-		text: lineStr,
-		from: passedLen,
-		to: passedLen + lineStr.length,
-		length: lineStr.length
-	}
+	let line = new ILine(
+		passedLen,
+		passedLen + lineStr.length,
+		lineNum,
+		lineStr
+	);
 	return { address, line };
 }

@@ -9,9 +9,6 @@ import { TagMenu } from "src/editor-mode/ui-components";
 import { ExtendedSettingTab } from "src/settings/ui/setting-tab";
 
 declare module "@codemirror/state" {
-	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-	export interface ILine extends Line {}
-
 	/**
 	 * MIT licensed, copyright (c) by Marijn Haverbeke and others at
 	 * CodeMirror.

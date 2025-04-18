@@ -9,6 +9,7 @@ import { SelectionObserver } from "src/editor-mode/preprocessor/observer";
 import { DecorationBuilder } from "src/editor-mode/decorator/builder";
 import { Formatter } from "src/editor-mode/formatting/formatter";
 import { hookLangState } from "src/editor-mode/utils/hook";
+import { Tree } from "@lezer/common";
 
 type TagMenuOptionCaches = Record<"colorMenuItem" | "spanTagMenuItem" | "divTagMenuItem", IndexCache>;
 
@@ -45,6 +46,20 @@ function _isEditorModeChanged(transaction: Transaction): boolean {
 	let isLivePreviewCurrently = transaction.state.field(editorLivePreviewField),
 		isLivePreviewPreviously = transaction.startState.field(editorLivePreviewField);
 	return isLivePreviewCurrently != isLivePreviewPreviously;
+}
+
+function _ensureMostUpdatedTree(transaction: Transaction): { tree: Tree, targetLen: number } {
+	let {
+		tree,
+		treeLen: targetLen
+	} = transaction.state.field(langStateField).context;
+
+	transaction.effects.forEach((effect) => {
+		if (effect.is(langStateFxType))
+			({ tree, treeLen: targetLen } = effect.value.context)
+	});
+
+	return { tree, targetLen };
 }
 
 class _EditorPlugin implements PluginValue {
@@ -131,10 +146,10 @@ export const editorSyntaxExtender = (plugin: ExtendedMarkdownSyntax): Extension 
 		},
 
 		update(prevField, transaction: Transaction) {
-			let newTree = syntaxTree(transaction.state),
-				refreshDesc = transaction.annotation(refreshCall),
-				completedTree = syntaxTreeAvailable(transaction.state, newTree.length),
-				{ parser, observer, builder, activities } = prevField;
+			let { tree: newTree, targetLen: stopAt } = _ensureMostUpdatedTree(transaction),
+				{ parser, observer, builder, activities } = prevField,
+				completedTree = syntaxTreeAvailable(transaction.state, stopAt),
+				refreshDesc = transaction.annotation(refreshCall);
 
 			let isParsing = false,
 				isObserving = false,
@@ -150,10 +165,10 @@ export const editorSyntaxExtender = (plugin: ExtendedMarkdownSyntax): Extension 
 			}
 			
 			else if (
-				(transaction.docChanged || parser.oldTree.length != newTree.length) &&
+				(parser.hasStoredChanges() || parser.lastStop != stopAt) &&
 				completedTree
 			) {
-				parser.applyChange(transaction.newDoc, newTree);
+				parser.applyChange(transaction.newDoc, newTree, stopAt);
 				isParsing = true;
 			}
 

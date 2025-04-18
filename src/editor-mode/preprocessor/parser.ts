@@ -1,13 +1,25 @@
 import { ChangeSet, Line, Text } from "@codemirror/state";
 import { Tree, TreeCursor } from "@lezer/common";
-import { PluginSettings, StateConfig, TokenGroup, ChangedRange, PlainRange, InlineFormat, Token } from "src/types";
+import { PluginSettings, TokenGroup, ChangedRange, PlainRange, InlineFormat, Token } from "src/types";
 import { Format, LineCtx, MarkdownViewMode, TokenLevel, TokenStatus } from "src/enums";
 import { Formats, InlineRules } from "src/format-configs/rules";
 import { handleFencedDivTag, handleInlineTag, Tokenizer } from "src/editor-mode/preprocessor/tokenizer";
 import { findNode, getContextFromNode, disableEscape, findShifterAt, getShifterStart, hasInterferer, reenableEscape } from "src/editor-mode/preprocessor/syntax-node";
 import { EditorDelimLookup, SKIPPED_NODE_RE } from "src/editor-mode/preprocessor/parser-configs";
 import { isBlankLine, getBlockEndAt, TextCursor } from "src/editor-mode/utils/doc-utils";
-import { provideTokenPartsRanges } from "src/editor-mode/utils/token-utils"
+import { findTokenIndexAt, provideTokenPartsRanges } from "src/editor-mode/utils/token-utils";
+
+/**
+ * Used for (re)configuring the state, especially in
+ * the case of document or tree change
+ */
+type ParserStateConfig = {
+	doc: Text,
+	tree: Tree,
+	startAt: number,
+	stopAt?: number | Line
+	settings: PluginSettings,
+}
 
 function _isTerminalChar(char: string, settings: PluginSettings): boolean {
 	for (let definedDelim in EditorDelimLookup)
@@ -38,6 +50,19 @@ function _composeChanges(changes: ChangeSet): ChangedRange | null {
 		changedTo: changedTo!,
 		length: changedTo! - initTo!
 	};
+}
+
+/**
+ * Interferer node is node that, if it was found within the changed range
+ * the end offset of stream will be moved forward to the end offset of
+ * the new tree. That's including the delimiters of codeblock, mathblock,
+ * or comment block.
+ */
+function _checkInterferer(changedRange: ChangedRange, newTree: Tree, oldTree: Tree): boolean {
+	return (
+		hasInterferer(newTree, changedRange.from, changedRange.changedTo) ||
+		hasInterferer(oldTree, changedRange.from, changedRange.initTo)
+	);
 }
 
 /**
@@ -178,27 +203,29 @@ export class EditorParserState {
 	public curCtx: LineCtx = LineCtx.NONE;
 	public prevCtx: LineCtx = LineCtx.NONE;
 
-	constructor(config: StateConfig, inlineTokens: TokenGroup, blockTokens: TokenGroup) {
+	constructor(config: ParserStateConfig, inlineTokens: TokenGroup, blockTokens: TokenGroup) {
 		this.doc = config.doc;
 		this.tree = config.tree;
-		this.textCursor = TextCursor.atOffset(this.doc, config.offset);
+		this.textCursor = TextCursor.atOffset(this.doc, config.startAt);
 		this.line = this.textCursor.curLine;
-		this.endOfStream = this.doc.lineAt(this.tree.length).number;
-		this.offset = config.offset - this.line.from;
+		this.offset = config.startAt - this.line.from;
 		this.inlineTokens = inlineTokens;
 		this.blockTokens = blockTokens;
 		this.cursor = this.tree.cursor();
 		this.settings = config.settings;
 		this.nextCursor();
 
+		this.endOfStream = config.stopAt instanceof Line
+			? config.stopAt.number
+			: this.doc.lineAt(config.stopAt ?? this.tree.length).number;
+
 		// if previous line is a blank line or the
 		// current line is the first line, then the current one
 		// should be a block start
 		let prevLine = this.prevLine;
-		if (prevLine)
-			this.isBlockStart = isBlankLine(prevLine);
-		else
-			this.isBlockStart = true;
+		this.isBlockStart = prevLine
+			? isBlankLine(prevLine)
+			: true;
 	}
 
 	/** global offset */
@@ -443,6 +470,7 @@ export class EditorParser {
 	public reparsedRanges: Record<TokenLevel, { from: number, initTo: number, changedTo: number }>;
 	public lastStreamPoint: PlainRange = { from: 0, to: 0 };
 	public oldTree: Tree;
+	public lastStop: number;
 
 	readonly settings: PluginSettings;
 
@@ -459,12 +487,14 @@ export class EditorParser {
 			: this.blockTokens;
 	}
 
+	public hasStoredChanges(): boolean {
+		return !!this._changeSet;
+	}
+
 	public storeChanges(changeSet: ChangeSet) {
-		if (this._changeSet) {
-			this._changeSet.compose(changeSet);
-		} else {
-			this._changeSet = changeSet;
-		}
+		this._changeSet = this._changeSet
+			? this._changeSet.compose(changeSet)
+			: changeSet;
 	}
 	
 	/**
@@ -472,7 +502,7 @@ export class EditorParser {
 	 * document. Should be use when actual initialization, or if there is a
 	 * setting change that need the parser to parse from the start.
 	 */
-	public initParse(doc: Text, tree: Tree): void {
+	public initParse(doc: Text, tree: Tree, stopAt?: number): void {
 		// Toggle escape.
 		if (this.settings.editorEscape)
 			reenableEscape();
@@ -485,13 +515,15 @@ export class EditorParser {
 		this.blockTokens = [];
 
 		// Start parsing.
-		this._defineState({ doc, tree, offset: 0, settings: this.settings });
+		this._defineState({ doc, tree, startAt: 0, stopAt, settings: this.settings });
 		this._streamParse();
 		this.reparsedRanges = {
 			[TokenLevel.INLINE]: { from: 0, initTo: 0, changedTo: this.inlineTokens.length },
 			[TokenLevel.BLOCK]: { from: 0, initTo: 0, changedTo: this.blockTokens.length }
 		}
+
 		this.oldTree = tree;
+		this.lastStop = stopAt ?? tree.length;
 
 		this._changeSet = null;
 	}
@@ -500,33 +532,49 @@ export class EditorParser {
 	 * Apply the change comes from the document or the length difference
 	 * between previous parsed tree and the current one.
 	 */
-	public applyChange(doc: Text, tree: Tree): void {
+	public applyChange(doc: Text, tree: Tree, stopAt = tree.length): void {
+
 		// Start stream offset can be the shortest length of both old and new
 		// tree, or the start offset of the changed range.
 		let changedRange = this._changeSet ? _composeChanges(this._changeSet) : null,
-			startStreamOffset = Math.min(this.oldTree.length, tree.length) + 1;
+			startStreamOffset = this.lastStop == stopAt
+				? stopAt
+				: Math.min(stopAt, this.lastStop) + 1;
 
 		this._changeSet = null;
 
 		if (changedRange)
 			startStreamOffset = Math.min(startStreamOffset, changedRange.from);
-		
-		let config: StateConfig = { doc, tree, offset: startStreamOffset, settings: this.settings };
-		this._defineState(config);
 
 		// Nearest next blank line is the end stream, unless there is no blank
 		// line exist within the new tree range, or the changed range encounters
 		// such interferer node.
-		let endStreamLine = changedRange && !this._checkInterferer(changedRange)
+		let endStreamLine = changedRange && _checkInterferer(changedRange, tree, this.oldTree)
 			? getBlockEndAt(doc, changedRange.changedTo)
-			: getBlockEndAt(doc, tree.length);
-		this._state.endOfStream = endStreamLine.number;
+			: getBlockEndAt(doc, stopAt);
+
+		let config: ParserStateConfig = {
+			doc, tree,
+			startAt: startStreamOffset,
+			stopAt: endStreamLine,
+			settings: this.settings
+		};
+
+		this._defineState(config);
 		
 		// Tokens that are located after the end of stream will be considered as
 		// left tokens, and will be shifted by the length of the changed range.
 		let leftTokens: Record<"inline" | "block", TokenGroup> = {
-			inline: this._getLeftTokens(this._filterTokens(this.inlineTokens, this.reparsedRanges[TokenLevel.INLINE]), changedRange, endStreamLine),
-			block: this._getLeftTokens(this._filterTokens(this.blockTokens, this.reparsedRanges[TokenLevel.BLOCK]), changedRange, endStreamLine)
+			inline: this._getLeftTokens(
+				this._filterTokens(this.inlineTokens, this.reparsedRanges[TokenLevel.INLINE]),
+				changedRange,
+				endStreamLine
+			),
+			block: this._getLeftTokens(
+				this._filterTokens(this.blockTokens, this.reparsedRanges[TokenLevel.BLOCK]),
+				changedRange,
+				endStreamLine
+			)
 		};
 
 		// If there are any terminal characters -are that being used as
@@ -547,10 +595,11 @@ export class EditorParser {
 		this.inlineTokens = this.inlineTokens.concat(leftTokens.inline);
 		this.blockTokens = this.blockTokens.concat(leftTokens.block);
 		this.oldTree = tree;
+		this.lastStop = stopAt ?? tree.length;
 	}
 
 	/** Define new state as parsing begins. */
-	private _defineState(config: StateConfig): void {
+	private _defineState(config: ParserStateConfig): void {
 		this._state = new EditorParserState(config, this.inlineTokens, this.blockTokens);
 		this._queue.attachState(this._state);
 		if (this.oldTree) this._shiftOffsetByNode();
@@ -672,19 +721,6 @@ export class EditorParser {
 				break;
 			}
 		}
-	}
-
-	/**
-	 * Interferer node is node that, if it was found within the changed range
-	 * the end offset of stream will be moved forward to the end offset of
-	 * the new tree. That's including the delimiters of codeblock, mathblock,
-	 * or comment block.
-	 */
-	private _checkInterferer(changedRange: ChangedRange): boolean {
-		return (
-			hasInterferer(this._state.tree, changedRange.from, changedRange.changedTo) ||
-			hasInterferer(this.oldTree, changedRange.from, changedRange.initTo)
-		);
 	}
 
 	private _filterTokens(tokens: TokenGroup, reparsedRange: typeof this.reparsedRanges[TokenLevel]): TokenGroup {

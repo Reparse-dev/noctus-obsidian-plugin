@@ -97,16 +97,16 @@ With "Tidier formatting" enabled in the settings, you can format a single word s
 <img src="docs/assets/tidier-formatting.gif" alt="tidier-formatting.gif"/>
 </details>
 
-> [!Note]
-> 
-> You don't need to reload the app after changing the settings.
-
 ### 7. Other Tweaks
 
 - Enable/disable each formatting type individually under "Syntax switch" section.
 - Prevent fenced div from being styled in source mode.
 - Specifies when tags should be displayed under "Tag display behavior" section.
 - etc...
+
+> [!Note]
+> 
+> You don't need to reload the app after changing the settings.
 
 ## 🎨 Styling Custom Spans and Fenced Divs
 
@@ -181,7 +181,7 @@ It depends on what character the others use in their syntax.
 - [ ] Customize formatting styles
 - [x] Applying syntax quickly using shortcuts and context menu
 - [x] ~~Class suggester~~ Predefined tags for custom span and fenced div
-- [ ] ~~More syntax, if necessary~~ *I'll be over here for a while*
+- [x] ~~More syntax, if necessary~~ *I'll be over here for a while*
 
 ## ⚙️ Compatibility Note
 

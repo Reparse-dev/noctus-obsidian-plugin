@@ -14,10 +14,10 @@ function _isTextNode(doc: Text): doc is TextNode {
 }
 
 export class ILine extends Line {
-	readonly from: number;
-	readonly to: number;
-	readonly number: number;
-	readonly text: string;
+	public readonly from: number;
+	public readonly to: number;
+	public readonly number: number;
+	public readonly text: string;
 
 	constructor(from: number, to: number, number: number, text: string) {
 		super();

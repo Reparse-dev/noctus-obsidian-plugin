@@ -40,6 +40,7 @@ function _retrieveDelimSpec(type: Format, role: Delimiter): DelimSpec {
 		({ char, length, exactLen } = InlineRules[type]);
 		allowSpaceOnDelim = false;
 	} else {
+		console.warn("Unknown block type:", type, BlockRules);
 		({ char, length, exactLen } = BlockRules[type]);
 		allowSpaceOnDelim = true;
 	}

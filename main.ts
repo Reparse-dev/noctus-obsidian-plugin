@@ -44,8 +44,8 @@ export default class ExtendedMarkdownSyntax extends Plugin {
 	}
 
 	onunload(): void {
-		this.tagManager.colorsHandler.destroy();
-		this.opacityHandler.destroy();
+		if (this.tagManager?.colorsHandler) this.tagManager.colorsHandler.destroy();
+		if (this.opacityHandler) this.opacityHandler.destroy();
 		console.log("Unload Extended Markdown Syntax");
 	}
 

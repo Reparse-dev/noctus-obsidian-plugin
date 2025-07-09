@@ -11,6 +11,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	customHighlight: MarkdownViewMode.ALL,
 	customSpan: MarkdownViewMode.ALL,
 	fencedDiv: MarkdownViewMode.ALL,
+	underline: MarkdownViewMode.ALL,
+	subtext: MarkdownViewMode.ALL,
 
 	// Formatting
 	tidyFormatting: true,

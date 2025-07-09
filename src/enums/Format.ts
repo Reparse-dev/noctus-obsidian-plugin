@@ -2,18 +2,22 @@
  * Formatting type for each token.
  */
 export enum Format {
-	/** Insertion (underline) */
+	/** Insertion */
 	INSERTION = 1,
 	/** Spoiler */
-	SPOILER,
+	SPOILER = 2,
 	/** Superscript */
-	SUPERSCRIPT,
+	SUPERSCRIPT = 3,
 	/** Subscript */
-	SUBSCRIPT,
+	SUBSCRIPT = 4,
 	/** Highlight */
-	HIGHLIGHT,
+	HIGHLIGHT = 5,
 	/** Custom span */
-	CUSTOM_SPAN,
+	CUSTOM_SPAN = 6,
 	/** Fenced div (custom block) */
-	FENCED_DIV
+	FENCED_DIV = 7,
+	/** Underline */
+	UNDERLINE = 8,
+	/** Subtext */
+	SUBTEXT = 9
 }

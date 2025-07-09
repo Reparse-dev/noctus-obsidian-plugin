@@ -13,7 +13,7 @@ function _getFormatter(view: EditorView): Formatter {
 export const insertionCmd: CtxMenuCommand = {
 	id: "toggle-insertion",
 	name: "Toggle insertion",
-	icon: "underline",
+	icon: "plus",
 	ctxMenuTitle: "Insertion",
 	editorCallback: (editor, ctx) => {
 		let editorView = (editor.activeCm || editor.cm);
@@ -111,6 +111,37 @@ export const fencedDivCmd: Command = {
 			formatter.startFormat(editorView, Format.FENCED_DIV, undefined, false, true);
 		}
 	},
+}
+
+
+export const underlineCmd: CtxMenuCommand = {
+	id: "toggle-underline",
+	name: "Toggle underline",
+	icon: "underline",
+	ctxMenuTitle: "Underline",
+	editorCallback: (editor, ctx) => {
+		let editorView = (editor.activeCm || editor.cm);
+		if (editorView instanceof EditorView) {
+			let formatter = _getFormatter(editorView);
+			formatter.startFormat(editorView, Format.UNDERLINE);
+		}
+	},
+	type: Format.UNDERLINE
+}
+
+export const subtextCmd: CtxMenuCommand = {
+	id: "toggle-subtext",
+	name: "Toggle subtext",
+	icon: "chevrons-down",
+	ctxMenuTitle: "Subtext",
+	editorCallback: (editor, ctx) => {
+		let editorView = (editor.activeCm || editor.cm);
+		if (editorView instanceof EditorView) {
+			let formatter = _getFormatter(editorView);
+			formatter.startFormat(editorView, Format.SUBTEXT);
+		}
+	},
+	type: Format.SUBTEXT
 }
 
 export const colorMenuCmd: Command = {

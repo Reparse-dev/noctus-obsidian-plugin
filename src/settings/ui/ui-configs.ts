@@ -26,7 +26,7 @@ export const COLOR_SETTINGS_SPEC: TagSettingsSpec = {
 	type: Format.HIGHLIGHT,
 	addBtnPlaceholder: "Add color",
 	nameFieldPlaceholder: "Color name",
-	tagFieldPlaceholder: "Tag string",
+	tagFieldPlaceholder: "Color string",
 	tagFilter: /[^a-z0-9-]/gi,
 	onAdd: (settingTab, settingItem, config: ColorConfig) => {
 		settingItem.addColorPicker(picker => {
@@ -52,17 +52,17 @@ export const COLOR_SETTINGS_SPEC: TagSettingsSpec = {
 
 export const SPAN_TAG_SETTINGS_SPEC: TagSettingsSpec = {
 	type: Format.CUSTOM_SPAN,
-	addBtnPlaceholder: "Add tag",
-	nameFieldPlaceholder: "Tag name",
-	tagFieldPlaceholder: "Tag string",
+	addBtnPlaceholder: "Add class",
+	nameFieldPlaceholder: "Class name",
+	tagFieldPlaceholder: "Class string",
 	tagFilter: /[^ a-z0-9-]/gi
 }
 
 export const DIV_TAG_SETTINGS_SPEC: TagSettingsSpec = {
 	type: Format.FENCED_DIV,
-	addBtnPlaceholder: "Add tag",
-	nameFieldPlaceholder: "Tag name",
-	tagFieldPlaceholder: "Tag string",
+	addBtnPlaceholder: "Add class",
+	nameFieldPlaceholder: "Class name",
+	tagFieldPlaceholder: "Class string",
 	tagFilter: /[^ a-z0-9-]/gi
 }
 
@@ -75,7 +75,7 @@ export const settingTabConfigs = (settings: PluginSettings): SettingRoot<PluginS
 		heading: "Syntax switch",
 		collapsible: true,
 		items: [{
-			name: "Insertion (underline)",
+			name: "Insertion",
 			desc: "Use double plus (\"++\") as a delimiter.",
 			fields: [{
 				type: Field.DROPDOWN,
@@ -127,7 +127,7 @@ export const settingTabConfigs = (settings: PluginSettings): SettingRoot<PluginS
 				callback: (_, plugin) => plugin.reconfigureDelimLookup()
 			}]
 		}, {
-			name: "Highlight color tag",
+			name: "Highlight (with color tag)",
 			desc: "Use alphanumeric and hyphen characters (\"A-Za-z0-9-\") after the opening delimiter covered by curly brackets (\"{}\").",
 			fields: [{
 				type: Field.DROPDOWN,
@@ -162,6 +162,32 @@ export const settingTabConfigs = (settings: PluginSettings): SettingRoot<PluginS
 				type: Field.DROPDOWN,
 				record: settings,
 				key: "fencedDiv",
+				spec: {
+					options: MARKDOWN_VIEW_MODE_DROPDOWN
+				},
+				update: { internal: true, deep: true },
+				callback: (_, plugin) => plugin.reconfigureDelimLookup()
+			}]
+		},	{
+			name: "Underline",
+			desc: "Use one equal sign (\"=\") as a delimiter.",
+			fields: [{
+				type: Field.DROPDOWN,
+				record: settings,
+				key: "underline",
+				spec: {
+					options: MARKDOWN_VIEW_MODE_DROPDOWN
+				},
+				update: { internal: true, deep: true },
+				callback: (_, plugin) => plugin.reconfigureDelimLookup()
+			}]
+		},	{
+			name: "Discord-flavored subtext",
+			desc: "Use a minus and a hashtag (\"-#\") as a delimiter.",
+			fields: [{
+				type: Field.DROPDOWN,
+				record: settings,
+				key: "subtext",
 				spec: {
 					options: MARKDOWN_VIEW_MODE_DROPDOWN
 				},

@@ -1,5 +1,10 @@
 .cm-ins {
 	text-decoration: underline;
+	color: lawngreen;
+	background-color: rgba(124, 252, 0, 0.3);
+}
+.cm-u {
+	text-decoration: underline;
 }
 .cm-sup {
 	vertical-align: top;

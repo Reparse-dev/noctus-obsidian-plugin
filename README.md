@@ -1,25 +1,35 @@
-# Extended Markdown Syntax - Obsidian Plugin
+# Noctus Obsidian Plugin (WIP)
 
-![banner.png](docs/assets/banner.png)
+> Based on the (frankly impressive) [Extended Markdown Syntax Plugin by kotaindah55](https://github.com/kotaindah55/extended-markdown-syntax). Thank you!
+> Currently only features underline & discord-flavored subtext on top of the original features. 
+> **The plugin is currently dysfunctional due to a BlockRules error from the implementation of new syntax**
+> README has been adapted for most and primarily reflects future plans (inconsistencies will be adressed soon!).
 
-Provides some alternatives for inline and block formatting using non-standard syntaxes instead of using html tags, such as underline, superscript, and much more.
+Provides alternatives to HTML Tags for inline and block formatting, extending the Obsidian-flavored Markdown syntax with the Noctus-flavored Markdown syntax such as underline, superscript, and much more. 
+Your formatting will be more diverse, direct, and clear using this plugin!
+
+> ![Note]
+>
+> This plugin is intended to be used with the [Noctus Obsidian Theme (WIP)](https://github.com/Reparse-dev/noctus-obsidian-theme)
 
 ## 🚀 Main Features
 
 - Extended inline syntax, including:
-    - insertion (underline),
-    - Discord-flavored spoiler,
-    - Pandoc-style superscript and subscript,
-    - custom color tag for highlight, and
-    - custom span with ability to insert your own class(es).
-- _Modified_ Pandoc-style fenced div for block-level syntax.
+    - insertion (`++insertion++`),
+    - underline (`=underline=`),
+    - Discord-flavored spoiler (`||spoiler||`),
+    - Discord-flavored subtext (`-#subtext`),
+    - Pandoc-style superscript (`^sup^`) and subscript (`~sub~`),
+    - support for custom color classes for highlight (`=={color}mark==`), and
+    - custom span with ability to insert your own class(es) and attributes (`<span{attribute/class}>`).
+- _Modified_ Pandoc-style fenced div for block-level syntax (`:::`).
 - Edit formatted text directly without omitting its style, in contrast to using HTML tags.
 - Context-aware, syntax won't be parsed while it encounters such a codeblock, codespan, or context boundary.
 - Quick format with commands and context menu.
 - Toggle specific syntax on and off.
-- Customize your own color tags for custom highlight.
-- Predefine your own tags for custom span and fenced div.
-- Supports rendering exported PDF.
+- Customize your own color attributes for custom highlight.
+- Predefine your own classes for custom span and fenced div.
+- **Supports rendering exported PDF.**
 
 ## ✍️ Usage
 
@@ -34,12 +44,14 @@ There are six inline formattings that currently developed in this plugin:
 | superscript | `^your-text^`          | <sup>your-text</sup>                                          |
 | subscript   | `~your-text~`          | <sub>your-text</sub>                                          |
 | highlight   | `=={color}your text==` | <mark>your text</mark>                                        |
-| custom span | `!!{myCls}your text!!` | your text (should be rendered with the `myCls` class defined) |
+| custom span | `<{class}your text>`   | your text (should be rendered with the `myCls` class defined) |
 
 By default:
-- **insertion** give the text underline style,
+- **insertion** give the text a green highlighted and underline style,
+- **underline** gives the text an underline style,
 - **spoiler** hide the text and can be revealed by clicking it (or hovering over it in editor mode),
 - **superscript** and **subscript** make the text being raised or lowered as `<sup>` and `<sub>` do.
+- **subtext** makes text smaller and less obvious.
 
 Additionally, for the **highlight** and **custom span**, you may insert a tag right after the opening delimiter, specifying the color for the highlight, and the classes for the custom span.
 
@@ -67,10 +79,6 @@ Under "Custom highlight" section in the settings, you can:
     - show or hide each palette from the color menu,
     - rearrange colors by dragging 6-dots icon on the left side.
 
-<details>
-<img src="docs/assets/custom-highlight.gif" alt="custom-highlight.gif"/>
-</details>
-
 ### 4. Predefined Tags
 
 In the settings, you can predefine specific tags for **custom span** and **fenced div**, then can be displayed in the tag menu. Same as the color palattes, you can set their name and arrange them.
@@ -81,10 +89,6 @@ This plugin provides commands to toggle each formatting type, also commands to s
 
 It also brings functionality of all those commands (except for fenced div) to the context menu, by right-clicking on the editor and choosing "More format".
 
-<details>
-<img src="docs/assets/commands.gif" alt="commands.gif"/>
-</details>
-
 > [!Note]
 >
 > In mobile devices, those commands can be added into the toolbar.
@@ -92,10 +96,6 @@ It also brings functionality of all those commands (except for fenced div) to th
 ### 6. Tidier Formatting
 
 With "Tidier formatting" enabled in the settings, you can format a single word simply by placing the cursor on it, without the need to select the entire word. Otherwise, it acts like a normal wrapper.
-
-<details>
-<img src="docs/assets/tidier-formatting.gif" alt="tidier-formatting.gif"/>
-</details>
 
 ### 7. Other Tweaks
 
@@ -170,38 +170,39 @@ Of course it's working on both, except for the fenced div.
 I tested it on a 250kB file and it's still working fine. This plugin also uses parser that implemented simple incremental and partial parsing, so you don't need to worry about facing with large files. But if you still have some issues with it, feel free to inform me what the issues you are struggling with.
 
 ### Will it cause conflict with other plugins that concerns extending syntax?
-It depends on what character the others use in their syntax.
+It depends on what character the others use in their syntax, if it overlaps conflict could be caused.
 
 ## 📋 Roadmap
 
-- [x] Enable/disable formatting in settings
-- [x] Applicable on mobile
-- [x] ~~Fixing paragraph alignment bug~~ For now, use fenced div to customize block level format
-- [x] Customize highlighting colors
-- [ ] Customize formatting styles
-- [x] Applying syntax quickly using shortcuts and context menu
-- [x] ~~Class suggester~~ Predefined tags for custom span and fenced div
-- [x] ~~More syntax, if necessary~~ *I'll be over here for a while*
+- [ ] Fix BlockRules error (which is making the Plugin dysfunctional as of now)
+- [ ] Properly implement Discord-flavored Subtext (`-#`)
+- [ ] Properly implement intended `<{class}span>` (and alternative `<span{attribute/class}>`) syntax
+- [ ] Extend the curly bracket functionality in custom span to allow for adding HTML attributes, similar to [javalent's Markdown Attributes](https://github.com/javalent/markdown-attributes).
+- [ ] Add inline attribute functionality: `||{color}spoiler{attribute/class}||` (color changes color when concealed), `=={color}highlight{attribute/class}==`, `={color}underline{attribute/class}=` (color changes underline color only), `++insertions{attribute/class}++`
+- [ ] Fix delimiter escape for rendered Markdown.
 
 ## ⚙️ Compatibility Note
 
-This plugin have been tested in the latest version of Obsidian (about 1.7.x - 1.8.x), and haven't been tested yet in the version 1.6.x and below.
+The original [Extended Markdown Syntax Plugin by kotaindah55](https://github.com/kotaindah55/extended-markdown-syntax) plugin has been tested in the latest version of Obsidian (about 1.7.x - 1.8.x), and hasn't been tested yet in the version 1.6.x and below.
 
 ## 🐞 Known Issues
 
+- Plugin dysfunctional due to BlockRules error as of now
 - Delimiter escaping doesn't work in the preview mode.
 - Cannot escape spoilers that are inside table cells (in source mode). (**cannot be fixed**)
 
-Feel free to let me know if you find any bugs...
+Feel free to let us know if you find bugs! Github issues are always welcome.
 
-## 🙏 Acknowledgment
+## 🙏 Credits & Acknowledgment
 
 Thanks to:
-- [Pandoc](https://pandoc.org/MANUAL.html) for the idea of some syntax,
+- [javalent's Markdown Attributes](https://github.com/javalent/markdown-attributes) & [Pandoc](https://pandoc.org/MANUAL.html) for the idea of some syntax,
 - [CommonMark](https://spec.commonmark.org/) and [Github Flavored Markdown](https://github.github.com/gfm/) for the markdown specification.
-- [Discord](https://discord.com/) for the spoiler idea.
+- [Discord](https://discord.com/) for the spoiler & subtext idea.
 - [Superschnizel](https://github.com/Superschnizel/obisdian-fast-text-color) for interactive menu idea,
 - [Exaroth](https://github.com/exaroth/mdx_custom_span_class) for custom span idea.
 - [Mara-Li](https://github.com/Mara-Li/obsidian-regex-mark) for some code snippets,
-- [marcel-goldammer](https://github.com/marcel-goldammer/obsidian-keyword-highlighter),
-- [attcoleanderson](https://github.com/mattcoleanderson/obsidian-dynamic-text-concealer)
+- [marcel-goldammer](https://github.com/marcel-goldammer/obsidian-keyword-highlighter) for highlighting inspiration,
+- [attcoleanderson](https://github.com/mattcoleanderson/obsidian-dynamic-text-concealer) for a dynamic text conceal example.
+
+Special thanks to [kotaindah55](https://github.com/kotaindah55/extended-markdown-syntax) for laying the ground work for this plugin with the [Extended Markdown Syntax Plugin](https://github.com/kotaindah55/extended-markdown-syntax), which is impressive in its userfriendliness, customizability, and scope. 

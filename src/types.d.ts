@@ -165,7 +165,7 @@ export type NodeSpec = {
 	type: string
 }
 
-export type InlineFormat = Extract<Format, Format.INSERTION | Format.SPOILER | Format.SUPERSCRIPT | Format.SUBSCRIPT | Format.HIGHLIGHT | Format.CUSTOM_SPAN>;
+export type InlineFormat = Extract<Format, Format.INSERTION | Format.SPOILER | Format.SUPERSCRIPT | Format.SUBSCRIPT | Format.HIGHLIGHT | Format.CUSTOM_SPAN | Format.UNDERLINE | Format.SUBTEXT >;
 
 export type BlockFormat = Exclude<Format, InlineFormat>;
 
@@ -197,6 +197,8 @@ export type PluginSettings = {
 	customHighlight: MarkdownViewMode;
 	customSpan: MarkdownViewMode;
 	fencedDiv: MarkdownViewMode;
+	underline: MarkdownViewMode;
+	subtext: MarkdownViewMode;
 	
 	// Tag behavior
 	hlTagDisplayBehaviour: DisplayBehaviour;

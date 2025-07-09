@@ -31,6 +31,12 @@ export function configureDelimLookup(settings: PluginSettings): void {
 	if (settings.customSpan & MarkdownViewMode.EDITOR_MODE) {
 		EditorDelimLookup[InlineRules[Format.CUSTOM_SPAN].char] = Format.CUSTOM_SPAN;
 	}
+	if (settings.underline & MarkdownViewMode.EDITOR_MODE) {
+		EditorDelimLookup[InlineRules[Format.UNDERLINE].char] = Format.UNDERLINE;
+	}
+	if (settings.subtext & MarkdownViewMode.EDITOR_MODE) {
+		EditorDelimLookup[InlineRules[Format.SUBTEXT].char] = Format.SUBTEXT;
+	}
 	// preview
 	if (settings.insertion & MarkdownViewMode.PREVIEW_MODE) {
 		PreviewDelimLookup[InlineRules[Format.INSERTION].char] = Format.INSERTION;
@@ -46,6 +52,12 @@ export function configureDelimLookup(settings: PluginSettings): void {
 	}
 	if (settings.customSpan & MarkdownViewMode.PREVIEW_MODE) {
 		PreviewDelimLookup[InlineRules[Format.CUSTOM_SPAN].char] = Format.CUSTOM_SPAN;
+	}
+	if (settings.underline & MarkdownViewMode.PREVIEW_MODE) {
+		EditorDelimLookup[InlineRules[Format.UNDERLINE].char] = Format.UNDERLINE;
+	}
+	if (settings.subtext & MarkdownViewMode.PREVIEW_MODE) {
+		EditorDelimLookup[InlineRules[Format.SUBTEXT].char] = Format.SUBTEXT;
 	}
 }
 

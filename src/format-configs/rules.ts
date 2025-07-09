@@ -44,7 +44,7 @@ export const InlineRules: Record<InlineFormat, InlineFormatRule> = {
 		char: "^",
 		length: 1,
 		exactLen: true,
-		allowSpace: false,
+		allowSpace: true,
 		mustBeClosed: true,
 		class: "sup",
 		getEl: () => document.createElement("sup"),
@@ -54,7 +54,7 @@ export const InlineRules: Record<InlineFormat, InlineFormatRule> = {
 		char: "~",
 		length: 1,
 		exactLen: true,
-		allowSpace: false,
+		allowSpace: true,
 		mustBeClosed: true,
 		class: "sub",
 		getEl: () => document.createElement("sub"),
@@ -72,7 +72,7 @@ export const InlineRules: Record<InlineFormat, InlineFormatRule> = {
 	},
 	[Format.CUSTOM_SPAN]: {
 		char: "!",
-		length: 2,
+		length: 1,
 		exactLen: true,
 		allowSpace: true,
 		mustBeClosed: true,
@@ -82,6 +82,26 @@ export const InlineRules: Record<InlineFormat, InlineFormatRule> = {
 			el.classList.add(InlineRules[Format.CUSTOM_SPAN].class);
 			return el;
 		},
+		builtin: false
+	},
+	[Format.UNDERLINE]: {
+		char: "=",
+		length: 1,
+		exactLen: true,
+		allowSpace: true,
+		mustBeClosed: true,
+		class: "u",
+		getEl: () => document.createElement("u"),
+		builtin: false
+	},
+	[Format.SUBTEXT]: {
+		char: "-#",
+		length: 1,
+		exactLen: true,
+		allowSpace: true,
+		mustBeClosed: false,
+		class: "small",
+		getEl: () => document.createElement("small"),
 		builtin: false
 	}
 }
